@@ -1,0 +1,80 @@
+# Environment Variables
+.env
+*.env
+env_template.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+beatwizard-env/
+venv/
+ENV/
+env/
+
+# Audio Files
+*.wav
+*.mp3
+*.flac
+*.m4a
+*.aiff
+*.ogg
+
+# Uploads and Temporary Files
+uploads/
+tmp/
+temp/
+*.tmp
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# Analysis Results Cache
+data/output/
+cache/
+
+# Frontend Build
+node_modules/
+frontend/dist/
+frontend/build/
+
+# Railway
+.railway/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter Notebooks
+.ipynb_checkpoints

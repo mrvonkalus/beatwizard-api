@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BeatWizard - Professional Music Analysis{% endblock %}</title>
+    
+    <!-- Modern CSS Framework -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .gradient-text {
+            background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="glass m-4 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-music text-2xl text-white"></i>
+                <span class="text-xl font-bold text-white">BeatWizard</span>
+            </div>
+            
+            <div class="hidden md:flex space-x-6">
+                <a href="/" class="text-white hover:text-gray-200 transition">Home</a>
+                <a href="/analyze" class="text-white hover:text-gray-200 transition">Analyze</a>
+                <a href="/demo" class="text-white hover:text-gray-200 transition">Demo</a>
+                <a href="#pricing" class="text-white hover:text-gray-200 transition">Pricing</a>
+            </div>
+            
+            <div class="flex space-x-2">
+                <button class="bg-white text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition">
+                    Sign In
+                </button>
+                <button class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:opacity-90 transition">
+                    Get Started
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass m-4 p-6 mt-12">
+        <div class="container mx-auto text-center text-white">
+            <div class="grid md:grid-cols-3 gap-8 mb-6">
+                <div>
+                    <h3 class="font-bold mb-2">BeatWizard</h3>
+                    <p class="text-sm opacity-80">Professional music analysis for producers at every level</p>
+                </div>
+                <div>
+                    <h3 class="font-bold mb-2">Features</h3>
+                    <ul class="text-sm opacity-80 space-y-1">
+                        <li>Professional Audio Analysis</li>
+                        <li>AI-Powered Feedback</li>
+                        <li>Sample Recommendations</li>
+                        <li>Progress Tracking</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold mb-2">Connect</h3>
+                    <div class="flex justify-center space-x-4">
+                        <a href="#" class="text-white hover:text-gray-200"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white hover:text-gray-200"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-white hover:text-gray-200"><i class="fab fa-youtube"></i></a>
+                        <a href="#" class="text-white hover:text-gray-200"><i class="fab fa-discord"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-white border-opacity-20 pt-4">
+                <p class="text-sm opacity-60">&copy; 2025 BeatWizard. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.10.2/cdn.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

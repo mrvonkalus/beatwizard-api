@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="container mx-auto px-4 py-16 text-center">
+    <div class="glass p-12 mb-12">
+        <h1 class="text-5xl font-bold text-white mb-6">
+            Get <span class="gradient-text">Professional Feedback</span><br>
+            on Your Tracks
+        </h1>
+        
+        <p class="text-xl text-white opacity-90 mb-8 max-w-2xl mx-auto">
+            Stop guessing what's wrong with your mix. BeatWizard gives you specific, actionable feedback 
+            just like a professional producer would.
+        </p>
+        
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/analyze" class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-4 rounded-lg font-bold text-lg hover:opacity-90 transition transform hover:scale-105">
+                <i class="fas fa-upload mr-2"></i>
+                Analyze Your Track
+            </a>
+            <a href="/demo" class="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition">
+                <i class="fas fa-play mr-2"></i>
+                See Demo
+            </a>
+        </div>
+        
+        <div class="mt-8 text-white opacity-75">
+            <p class="text-sm">✨ Free analysis • No credit card required • Results in 60 seconds</p>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="container mx-auto px-4 py-16">
+    <div class="text-center mb-12">
+        <h2 class="text-4xl font-bold text-white mb-4">
+            Why Producers Choose BeatWizard
+        </h2>
+        <p class="text-xl text-white opacity-80">
+            Professional-grade analysis that actually helps you improve
+        </p>
+    </div>
+    
+    <div class="grid md:grid-cols-3 gap-8">
+        <!-- Feature 1 -->
+        <div class="glass p-8 text-center">
+            <div class="bg-gradient-to-r from-pink-500 to-purple-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-bullseye text-white text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-3">Specific Feedback</h3>
+            <p class="text-white opacity-80">
+                "Your kick needs more punch around 80Hz" - not generic advice, actual solutions you can use immediately.
+            </p>
+        </div>
+        
+        <!-- Feature 2 -->
+        <div class="glass p-8 text-center">
+            <div class="bg-gradient-to-r from-blue-500 to-teal-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-brain text-white text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-3">AI-Powered Insights</h3>
+            <p class="text-white opacity-80">
+                Smart feedback that adapts to your skill level and genre, from beginner tips to pro techniques.
+            </p>
+        </div>
+        
+        <!-- Feature 3 -->
+        <div class="glass p-8 text-center">
+            <div class="bg-gradient-to-r from-green-500 to-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-chart-line text-white text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-3">Track Your Progress</h3>
+            <p class="text-white opacity-80">
+                See your mixing skills improve over time with detailed progress tracking and skill assessments.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Sample Analysis Preview -->
+<section class="container mx-auto px-4 py-16">
+    <div class="glass p-12">
+        <h2 class="text-3xl font-bold text-white text-center mb-8">
+            See What BeatWizard Finds
+        </h2>
+        
+        <div class="grid md:grid-cols-2 gap-8">
+            <div>
+                <h3 class="text-xl font-bold text-white mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-400 mr-2"></i>
+                    Issues Detected
+                </h3>
+                <div class="space-y-3">
+                    <div class="bg-red-500 bg-opacity-20 border border-red-500 border-opacity-30 rounded-lg p-4">
+                        <p class="text-white font-medium">🥁 Kick: Lacks punch and clarity</p>
+                        <p class="text-white opacity-80 text-sm">Try a kick with more 60-80Hz content</p>
+                    </div>
+                    <div class="bg-yellow-500 bg-opacity-20 border border-yellow-500 border-opacity-30 rounded-lg p-4">
+                        <p class="text-white font-medium">🔊 Loudness: Too quiet for streaming</p>
+                        <p class="text-white opacity-80 text-sm">Increase level by +16dB for Spotify compliance</p>
+                    </div>
+                    <div class="bg-orange-500 bg-opacity-20 border border-orange-500 border-opacity-30 rounded-lg p-4">
+                        <p class="text-white font-medium">🎵 Bass: Needs more fundamental frequency</p>
+                        <p class="text-white opacity-80 text-sm">Layer sub bass with mid bass for fullness</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h3 class="text-xl font-bold text-white mb-4">
+                    <i class="fas fa-lightbulb text-yellow-400 mr-2"></i>
+                    Recommendations
+                </h3>
+                <div class="space-y-3">
+                    <div class="bg-green-500 bg-opacity-20 border border-green-500 border-opacity-30 rounded-lg p-4">
+                        <p class="text-white font-medium">📦 Sample Packs</p>
+                        <p class="text-white opacity-80 text-sm">KSHMR Kick Collection, Modern Trap Kicks Vol. 3</p>
+                    </div>
+                    <div class="bg-blue-500 bg-opacity-20 border border-blue-500 border-opacity-30 rounded-lg p-4">
+                        <p class="text-white font-medium">🎚️ EQ Settings</p>
+                        <p class="text-white opacity-80 text-sm">High-pass at 30Hz, boost 80Hz, cut 3kHz harshness</p>
+                    </div>
+                    <div class="bg-purple-500 bg-opacity-20 border border-purple-500 border-opacity-30 rounded-lg p-4">
+                        <p class="text-white font-medium">🎧 Reference Tracks</p>
+                        <p class="text-white opacity-80 text-sm">Study Flume - "Never Be Like You" for kick selection</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-8">
+            <a href="/demo" class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition">
+                See Full Demo Analysis
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Pricing Section -->
+<section id="pricing" class="container mx-auto px-4 py-16">
+    <div class="text-center mb-12">
+        <h2 class="text-4xl font-bold text-white mb-4">
+            Simple, Fair Pricing
+        </h2>
+        <p class="text-xl text-white opacity-80">
+            Professional feedback that fits your budget
+        </p>
+    </div>
+    
+    <div class="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        <!-- Free Tier -->
+        <div class="glass p-8 text-center">
+            <h3 class="text-2xl font-bold text-white mb-2">Free</h3>
+            <p class="text-4xl font-bold text-white mb-4">$0</p>
+            <p class="text-white opacity-80 mb-6">Perfect for trying out</p>
+            
+            <ul class="text-white space-y-2 mb-6">
+                <li><i class="fas fa-check text-green-400 mr-2"></i>1 analysis per month</li>
+                <li><i class="fas fa-check text-green-400 mr-2"></i>Basic feedback</li>
+                <li><i class="fas fa-check text-green-400 mr-2"></i>Core recommendations</li>
+            </ul>
+            
+            <button class="w-full bg-white text-purple-600 py-2 rounded-lg font-medium hover:bg-gray-100 transition">
+                Get Started Free
+            </button>
+        </div>
+        
+        <!-- Pro Tier -->
+        <div class="glass p-8 text-center border-2 border-gradient-to-r from-pink-500 to-purple-600 relative">
+            <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-medium">
+                Most Popular
+            </div>
+            
+            <h3 class="text-2xl font-bold text-white mb-2">Pro</h3>
+            <p class="text-4xl font-bold text-white mb-4">$9.99<span class="text-lg opacity-60">/month</span></p>
+            <p class="text-white opacity-80 mb-6">For serious producers</p>
+            
+            <ul class="text-white space-y-2 mb-6">
+                <li><i class="fas fa-check text-green-400 mr-2"></i>Unlimited analyses</li>
+                <li><i class="fas fa-check text-green-400 mr-2"></i>Advanced AI feedback</li>
+                <li><i class="fas fa-check text-green-400 mr-2"></i>Progress tracking</li>
+                <li><i class="fas fa-check text-green-400 mr-2"></i>PDF reports</li>
+                <li><i class="fas fa-check text-green-400 mr-2"></i>Priority processing</li>
+            </ul>
+            
+            <button class="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-2 rounded-lg font-medium hover:opacity-90 transition">
+                Start Pro Trial
+            </button>
+        </div>
+        
+        <!-- Pay Per Track -->
+        <div class="glass p-8 text-center">
+            <h3 class="text-2xl font-bold text-white mb-2">Per Track</h3>
+            <p class="text-4xl font-bold text-white mb-4">$2.99</p>
+            <p class="text-white opacity-80 mb-6">No commitment needed</p>
+            
+            <ul class="text-white space-y-2 mb-6">
+                <li><i class="fas fa-check text-green-400 mr-2"></i>Full analysis</li>
+                <li><i class="fas fa-check text-green-400 mr-2"></i>AI feedback</li>
+                <li><i class="fas fa-check text-green-400 mr-2"></i>PDF report</li>
+                <li><i class="fas fa-check text-green-400 mr-2"></i>Sample suggestions</li>
+            </ul>
+            
+            <button class="w-full bg-white text-purple-600 py-2 rounded-lg font-medium hover:bg-gray-100 transition">
+                Analyze One Track
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="container mx-auto px-4 py-16">
+    <div class="glass p-12 text-center">
+        <h2 class="text-3xl font-bold text-white mb-4">
+            Ready to Level Up Your Tracks?
+        </h2>
+        <p class="text-xl text-white opacity-90 mb-8">
+            Join thousands of producers getting professional feedback on their music
+        </p>
+        
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/analyze" class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-4 rounded-lg font-bold text-lg hover:opacity-90 transition transform hover:scale-105">
+                <i class="fas fa-upload mr-2"></i>
+                Upload Your Track Now
+            </a>
+        </div>
+        
+        <div class="mt-6 flex justify-center items-center space-x-6 text-white opacity-75">
+            <div class="flex items-center">
+                <i class="fas fa-clock mr-2"></i>
+                <span>60 second analysis</span>
+            </div>
+            <div class="flex items-center">
+                <i class="fas fa-shield-alt mr-2"></i>
+                <span>Secure upload</span>
+            </div>
+            <div class="flex items-center">
+                <i class="fas fa-star mr-2"></i>
+                <span>Professional quality</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

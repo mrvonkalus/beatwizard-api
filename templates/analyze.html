@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+
+{% block title %}Analyze Your Track - BeatWizard{% endblock %}
+
+{% block content %}
+<section class="container mx-auto px-4 py-12">
+    <div class="max-w-2xl mx-auto">
+        <div class="glass p-8 mb-8">
+            <h1 class="text-3xl font-bold text-white text-center mb-2">
+                <i class="fas fa-upload text-pink-400 mr-3"></i>
+                Analyze Your Track
+            </h1>
+            <p class="text-white opacity-80 text-center mb-8">
+                Upload your track and get professional feedback in 60 seconds
+            </p>
+            
+            <!-- Upload Form -->
+            <form id="uploadForm" enctype="multipart/form-data" class="space-y-6">
+                <!-- File Upload Area -->
+                <div class="border-2 border-dashed border-white border-opacity-30 rounded-lg p-8 text-center hover:border-opacity-50 transition" 
+                     id="dropZone"
+                     ondrop="dropHandler(event);" 
+                     ondragover="dragOverHandler(event);" 
+                     ondragleave="dragLeaveHandler(event);">
+                    
+                    <div id="uploadContent">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-white opacity-60 mb-4"></i>
+                        <p class="text-white text-lg mb-2">Drag & drop your audio file here</p>
+                        <p class="text-white opacity-60 mb-4">or</p>
+                        <label for="fileInput" class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-lg font-medium cursor-pointer hover:opacity-90 transition inline-block">
+                            Browse Files
+                        </label>
+                        <input type="file" id="fileInput" name="file" accept=".wav,.mp3,.flac,.m4a" class="hidden" onchange="handleFileSelect(event)">
+                    </div>
+                    
+                    <div id="fileInfo" class="hidden">
+                        <i class="fas fa-music text-3xl text-green-400 mb-2"></i>
+                        <p id="fileName" class="text-white text-lg font-medium"></p>
+                        <p id="fileSize" class="text-white opacity-60"></p>
+                        <button type="button" onclick="clearFile()" class="text-red-400 hover:text-red-300 text-sm mt-2">
+                            <i class="fas fa-times mr-1"></i>Remove
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Track Settings -->
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-white font-medium mb-2">Your Skill Level</label>
+                        <select name="skill_level" class="w-full bg-white bg-opacity-20 text-white border border-white border-opacity-30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-pink-500">
+                            <option value="beginner" class="text-gray-900">Beginner</option>
+                            <option value="intermediate" class="text-gray-900">Intermediate</option>
+                            <option value="advanced" class="text-gray-900">Advanced</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-white font-medium mb-2">Genre</label>
+                        <select name="genre" class="w-full bg-white bg-opacity-20 text-white border border-white border-opacity-30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-pink-500">
+                            <option value="electronic" class="text-gray-900">Electronic</option>
+                            <option value="house" class="text-gray-900">House</option>
+                            <option value="trap" class="text-gray-900">Trap</option>
+                            <option value="techno" class="text-gray-900">Techno</option>
+                            <option value="dubstep" class="text-gray-900">Dubstep</option>
+                            <option value="pop" class="text-gray-900">Pop</option>
+                            <option value="hip-hop" class="text-gray-900">Hip-Hop</option>
+                            <option value="other" class="text-gray-900">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" id="analyzeButton" class="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-4 rounded-lg font-bold text-lg hover:opacity-90 transition transform hover:scale-105 disabled:opacity-50 disabled:transform-none" disabled>
+                    <i class="fas fa-magic mr-2"></i>
+                    Analyze Track
+                </button>
+                
+                <!-- File Requirements -->
+                <div class="text-center text-white opacity-60 text-sm">
+                    <p class="mb-1">Supported formats: MP3, WAV, FLAC, M4A</p>
+                    <p>Maximum file size: 100MB • Analysis time: ~60 seconds</p>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Processing Status (Hidden by default) -->
+        <div id="processingStatus" class="glass p-8 text-center hidden">
+            <div class="mb-4">
+                <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto"></div>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Analyzing Your Track</h3>
+            <p class="text-white opacity-80 mb-4" id="statusMessage">Uploading and processing your track...</p>
+            
+            <div class="bg-white bg-opacity-20 rounded-full h-2 mb-4">
+                <div id="progressBar" class="bg-gradient-to-r from-pink-500 to-purple-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            
+            <div class="text-white opacity-60 text-sm space-y-1">
+                <p id="step1" class="opacity-40">📤 Uploading file...</p>
+                <p id="step2" class="opacity-40">🎵 Analyzing audio...</p>
+                <p id="step3" class="opacity-40">🤖 Generating AI feedback...</p>
+                <p id="step4" class="opacity-40">📊 Preparing results...</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Example Analysis Preview -->
+<section class="container mx-auto px-4 py-12">
+    <div class="max-w-4xl mx-auto">
+        <div class="glass p-8">
+            <h2 class="text-2xl font-bold text-white text-center mb-6">
+                What You'll Get
+            </h2>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="bg-gradient-to-r from-red-500 to-pink-500 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-exclamation-triangle text-white"></i>
+                    </div>
+                    <h3 class="text-white font-bold mb-2">Issues Detected</h3>
+                    <p class="text-white opacity-70 text-sm">Specific problems with your mix and how to fix them</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-gradient-to-r from-blue-500 to-purple-500 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-lightbulb text-white"></i>
+                    </div>
+                    <h3 class="text-white font-bold mb-2">Smart Suggestions</h3>
+                    <p class="text-white opacity-70 text-sm">AI-powered recommendations tailored to your skill level</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-gradient-to-r from-green-500 to-teal-500 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-download text-white"></i>
+                    </div>
+                    <h3 class="text-white font-bold mb-2">Sample Packs</h3>
+                    <p class="text-white opacity-70 text-sm">Specific sample recommendations to improve your sound</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-gradient-to-r from-yellow-500 to-orange-500 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-chart-line text-white"></i>
+                    </div>
+                    <h3 class="text-white font-bold mb-2">Technical Analysis</h3>
+                    <p class="text-white opacity-70 text-sm">Professional loudness, frequency, and stereo analysis</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-gradient-to-r from-purple-500 to-indigo-500 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-graduation-cap text-white"></i>
+                    </div>
+                    <h3 class="text-white font-bold mb-2">Learning Path</h3>
+                    <p class="text-white opacity-70 text-sm">Personalized roadmap for your musical growth</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-gradient-to-r from-pink-500 to-red-500 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-file-pdf text-white"></i>
+                    </div>
+                    <h3 class="text-white font-bold mb-2">PDF Report</h3>
+                    <p class="text-white opacity-70 text-sm">Professional report you can save and reference</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let selectedFile = null;
+
+// Drag and drop handlers
+function dragOverHandler(ev) {
+    ev.preventDefault();
+    document.getElementById('dropZone').classList.add('border-pink-400');
+}
+
+function dragLeaveHandler(ev) {
+    ev.preventDefault();
+    document.getElementById('dropZone').classList.remove('border-pink-400');
+}
+
+function dropHandler(ev) {
+    ev.preventDefault();
+    document.getElementById('dropZone').classList.remove('border-pink-400');
+    
+    const files = ev.dataTransfer.files;
+    if (files.length > 0) {
+        handleFile(files[0]);
+    }
+}
+
+// File selection handler
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (file) {
+        handleFile(file);
+    }
+}
+
+// Handle file processing
+function handleFile(file) {
+    // Validate file type
+    const allowedTypes = ['audio/wav', 'audio/mpeg', 'audio/mp3', 'audio/flac', 'audio/mp4'];
+    const allowedExtensions = ['.wav', '.mp3', '.flac', '.m4a'];
+    
+    const isValidType = allowedTypes.includes(file.type) || 
+                       allowedExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+    
+    if (!isValidType) {
+        alert('Please select a valid audio file (MP3, WAV, FLAC, or M4A)');
+        return;
+    }
+    
+    // Validate file size (100MB limit)
+    if (file.size > 100 * 1024 * 1024) {
+        alert('File is too large. Please select a file smaller than 100MB.');
+        return;
+    }
+    
+    selectedFile = file;
+    showFileInfo(file);
+    document.getElementById('analyzeButton').disabled = false;
+}
+
+// Show file information
+function showFileInfo(file) {
+    document.getElementById('uploadContent').classList.add('hidden');
+    document.getElementById('fileInfo').classList.remove('hidden');
+    
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatFileSize(file.size);
+}
+
+// Clear selected file
+function clearFile() {
+    selectedFile = null;
+    document.getElementById('uploadContent').classList.remove('hidden');
+    document.getElementById('fileInfo').classList.add('hidden');
+    document.getElementById('analyzeButton').disabled = true;
+    document.getElementById('fileInput').value = '';
+}
+
+// Format file size
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Form submission
+document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    if (!selectedFile) {
+        alert('Please select an audio file first.');
+        return;
+    }
+    
+    // Show processing status
+    document.querySelector('.glass').classList.add('hidden');
+    document.getElementById('processingStatus').classList.remove('hidden');
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('skill_level', document.querySelector('[name="skill_level"]').value);
+    formData.append('genre', document.querySelector('[name="genre"]').value);
+    
+    // Simulate progress
+    updateProgress(0, 'Uploading file...', 'step1');
+    
+    try {
+        const response = await fetch('/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        updateProgress(25, 'Analyzing audio...', 'step2');
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            updateProgress(75, 'Generating AI feedback...', 'step3');
+            
+            // Simulate processing time
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            updateProgress(100, 'Preparing results...', 'step4');
+            
+            // Redirect to results
+            window.location.href = result.redirect;
+        } else {
+            throw new Error(result.error || 'Analysis failed');
+        }
+    } catch (error) {
+        alert('Analysis failed: ' + error.message);
+        // Reset form
+        location.reload();
+    }
+});
+
+// Update progress indicator
+function updateProgress(percentage, message, currentStep) {
+    document.getElementById('progressBar').style.width = percentage + '%';
+    document.getElementById('statusMessage').textContent = message;
+    
+    // Update step indicators
+    const steps = ['step1', 'step2', 'step3', 'step4'];
+    steps.forEach(step => {
+        const element = document.getElementById(step);
+        if (step === currentStep) {
+            element.classList.remove('opacity-40');
+            element.classList.add('opacity-100', 'text-pink-400');
+        } else if (steps.indexOf(step) < steps.indexOf(currentStep)) {
+            element.classList.remove('opacity-40');
+            element.classList.add('opacity-100', 'text-green-400');
+        }
+    });
+}
+</script>
+{% endblock %}
