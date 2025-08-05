@@ -86,8 +86,8 @@ def main():
     urls_to_test = [
         ("Railway (provided)", "https://beatwizard-minimal-api-production.up.railway.app"),
         ("Railway (alt)", "https://beatwizard-api-production.up.railway.app"),
-        # Add your Render URL here if you use it:
-        # ("Render", "https://beatwizard-minimal-api.onrender.com"),
+        ("Render.com", "https://beatwizard-minimal-api.onrender.com"),
+        # Add your actual Render URL here once deployed
     ]
     
     print("🔍 Testing BeatWizard API Deployments")
