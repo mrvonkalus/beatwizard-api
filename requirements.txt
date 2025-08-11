@@ -8,3 +8,7 @@ gunicorn>=21.0.0
 
 # Basic Utilities  
 requests>=2.31.0
+
+# Analyze-Lite dependencies
+numpy==1.26.4
+soundfile==0.12.1
