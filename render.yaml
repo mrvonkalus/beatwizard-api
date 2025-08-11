@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: beatwizard-api
+    env: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers ${WEB_CONCURRENCY:-2} --timeout 120 --max-requests 100 --preload app-minimal:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: WEB_CONCURRENCY
+        value: 2
+    region: oregon
+    autoDeploy: true
+    runtime: docker
