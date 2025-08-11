@@ -27,6 +27,14 @@ try:
 except Exception:
     ANALYZE_LITE_AVAILABLE = False
 
+# Full analyzer deps (Phase 2)
+try:
+    import librosa  # type: ignore
+    import pyloudnorm as pyln  # type: ignore
+    FULL_ANALYZER_AVAILABLE = True
+except Exception:
+    FULL_ANALYZER_AVAILABLE = False
+
 # Try to import audio libraries, but gracefully handle if missing
 AUDIO_AVAILABLE = False
 try:
@@ -70,6 +78,12 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 ALLOWED_EXTENSIONS = {'wav', 'mp3', 'flac', 'm4a', 'aiff', 'ogg'}
 # For analyze-lite specifically (libsndfile-backed formats; mp3 not guaranteed)
 ANALYZE_LITE_ALLOWED_EXTS = {'.wav', '.flac', '.ogg', '.oga', '.aiff', '.aif', '.aifc'}
+# Full analyzer supports the same set for now (MP3 later via ffmpeg/audioread)
+FULL_ANALYZE_ALLOWED_EXTS = ANALYZE_LITE_ALLOWED_EXTS
+
+# Full analyzer limits
+ANALYZE_SECONDS = int(os.environ.get('BW_ANALYZE_SECONDS', '90'))
+TARGET_SR = int(os.environ.get('BW_TARGET_SR', '22050'))
 
 def allowed_file(filename: str) -> bool:
     """Check if file extension is allowed"""
@@ -88,6 +102,7 @@ def health_check():
         'version': '1.0.0-minimal',
         'audio_processing': AUDIO_AVAILABLE,
         'analyze_lite': ANALYZE_LITE_AVAILABLE,
+        'full_analyzer': FULL_ANALYZER_AVAILABLE,
         'mode': 'minimal_deployment',
         'message': 'Basic Flask app deployed successfully! 🚀',
         'timestamp': time.time()
@@ -125,7 +140,9 @@ def api_info():
             'GET /health - Detailed health',
             'GET /api/info - This endpoint',
             'GET /api/demo - Demo response',
-            'POST /api/echo - Echo test'
+            'POST /api/echo - Echo test',
+            'POST /api/analyze-lite - Basic analysis',
+            'POST /api/analyze - Full analysis'
         ],
         'audio_features': {
             'status': 'coming_soon',
@@ -219,6 +236,94 @@ def upload_placeholder():
     })
 
 
+@app.route('/api/analyze', methods=['POST'])
+def analyze_full():
+    """
+    Full analysis using librosa + pyloudnorm.
+    Safeguards: analyze first N seconds, resample to TARGET_SR, WAV/FLAC first.
+    """
+    if not FULL_ANALYZER_AVAILABLE:
+        return jsonify({'error': 'Full analyzer dependencies not available'}), 503
+
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file uploaded'}), 400
+
+    upl = request.files['file']
+    if not upl or upl.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+
+    filename = upl.filename
+    lower = filename.lower()
+    ext = '.' + lower.rsplit('.', 1)[1] if '.' in lower else ''
+    if ext not in FULL_ANALYZE_ALLOWED_EXTS:
+        return jsonify({'error': 'Unsupported file extension', 'allowed_exts': sorted(list(FULL_ANALYZE_ALLOWED_EXTS))}), 415
+
+    content_len = request.content_length or 0
+    if content_len > app.config['MAX_CONTENT_LENGTH']:
+        max_mb = app.config['MAX_CONTENT_LENGTH'] // (1024 * 1024)
+        return jsonify({'error': f'File too large. Max {max_mb} MB'}), 413
+
+    data = upl.read()
+    if not data:
+        return jsonify({'error': 'Empty file'}), 400
+
+    bio = io.BytesIO(data)
+
+    try:
+        y, sr = librosa.load(bio, sr=TARGET_SR, mono=True, duration=ANALYZE_SECONDS)
+    except Exception as e:
+        return jsonify({'error': 'Decoder error', 'detail': str(e)}), 415
+
+    if y.size == 0:
+        return jsonify({'error': 'No audio samples decoded'}), 400
+
+    try:
+        tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
+        tempo = float(tempo)
+    except Exception:
+        tempo = None
+
+    try:
+        chroma = librosa.feature.chroma_cqt(y=y, sr=sr)
+        pitch_class_strength = chroma.mean(axis=1)
+        key_index = int(pitch_class_strength.argmax())
+        key_guess = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][key_index]
+    except Exception:
+        key_guess = None
+
+    try:
+        meter = pyln.Meter(sr)
+        lufs = float(meter.integrated_loudness(y))
+    except Exception:
+        lufs = None
+
+    try:
+        S = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=64)
+        S_db = librosa.power_to_db(S, ref=np.max)
+        spectrum_summary = {
+            'mean_db': float(np.mean(S_db)),
+            'median_db': float(np.median(S_db)),
+            'p90_db': float(np.percentile(S_db, 90))
+        }
+    except Exception:
+        spectrum_summary = None
+
+    return jsonify({
+        'ok': True,
+        'analysis': {
+            'tempo_bpm': tempo,
+            'key_guess': key_guess,
+            'lufs': lufs,
+            'spectrum_summary': spectrum_summary,
+            'sample_rate': sr,
+            'analyzed_seconds': ANALYZE_SECONDS,
+        },
+        'file': {
+            'name': filename,
+            'size_bytes': len(data),
+            'ext': ext
+        }
+    })
 @app.route('/api/analyze-lite', methods=['POST'])
 def analyze_lite():
     """
@@ -373,6 +478,9 @@ def deployment_status():
                 'libsndfile': libsndfile_version,
             }
         },
+        'full_analyzer': {
+            'enabled': FULL_ANALYZER_AVAILABLE
+        },
         'limits': {
             'max_upload_mb': app.config.get('MAX_CONTENT_LENGTH', 0) // (1024 * 1024)
         }
@@ -411,7 +519,8 @@ def not_found(error):
             'POST /api/echo',
             'POST /api/upload',
             'GET /api/status',
-            'POST /api/analyze-lite'
+            'POST /api/analyze-lite',
+            'POST /api/analyze'
         ]
     }), 404
 
