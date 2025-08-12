@@ -273,6 +273,22 @@ def analyze_full():
         # Load the full audio file - let librosa determine the actual duration
         y, sr = librosa.load(bio, sr=TARGET_SR, mono=True)
         actual_duration = len(y) / sr
+        
+        # Debug: Check if we're getting reasonable audio data
+        if len(y) == 0:
+            return jsonify({'error': 'No audio data loaded'}), 400
+            
+        # Debug: Check audio statistics
+        audio_stats = {
+            'samples': len(y),
+            'sample_rate': sr,
+            'duration': actual_duration,
+            'min_amplitude': float(np.min(y)),
+            'max_amplitude': float(np.max(y)),
+            'mean_amplitude': float(np.mean(y)),
+            'rms': float(np.sqrt(np.mean(y**2)))
+        }
+        
     except Exception as e:
         return jsonify({'error': 'Decoder error', 'detail': str(e)}), 415
 
@@ -280,18 +296,29 @@ def analyze_full():
         return jsonify({'error': 'No audio samples decoded'}), 400
 
     try:
-        tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
-        tempo = float(tempo)
-    except Exception:
+        # Debug: Check if audio has enough energy for tempo detection
+        if np.sqrt(np.mean(y**2)) < 0.001:  # Very quiet audio
+            tempo = None
+        else:
+            tempo, _ = librosa.beat.beat_track(y=y, sr=sr, hop_length=512, start_bpm=120)
+            tempo = float(tempo)
+    except Exception as e:
+        print(f"Tempo detection error: {e}")
         tempo = None
 
     try:
-        chroma = librosa.feature.chroma_cqt(y=y, sr=sr)
+        # Debug: Use more robust key detection
+        chroma = librosa.feature.chroma_cqt(y=y, sr=sr, hop_length=512)
         pitch_class_strength = chroma.mean(axis=1)
         key_index = int(pitch_class_strength.argmax())
         key_guess = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][key_index]
-    except Exception:
+        
+        # Debug: Check chroma strength
+        chroma_strength = float(np.max(pitch_class_strength))
+    except Exception as e:
+        print(f"Key detection error: {e}")
         key_guess = None
+        chroma_strength = None
 
     try:
         meter = pyln.Meter(sr)
@@ -319,6 +346,10 @@ def analyze_full():
             'spectrum_summary': spectrum_summary,
             'sample_rate': sr,
             'analyzed_seconds': actual_duration,
+        },
+        'debug': {
+            'audio_stats': audio_stats,
+            'chroma_strength': chroma_strength if 'chroma_strength' in locals() else None
         },
         'file': {
             'name': filename,
