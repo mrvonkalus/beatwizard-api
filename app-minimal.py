@@ -270,16 +270,9 @@ def analyze_full():
     bio = io.BytesIO(data)
 
     try:
-        # Load the full audio file first to get actual duration
-        y_full, sr_full = librosa.load(bio, sr=None, mono=True)
-        actual_duration = len(y_full) / sr_full
-        
-        # Use the shorter of: actual duration or ANALYZE_SECONDS
-        analyze_duration = min(actual_duration, ANALYZE_SECONDS)
-        
-        # Reload with the correct duration
-        bio.seek(0)  # Reset file pointer
-        y, sr = librosa.load(bio, sr=TARGET_SR, mono=True, duration=analyze_duration)
+        # Load the full audio file - let librosa determine the actual duration
+        y, sr = librosa.load(bio, sr=TARGET_SR, mono=True)
+        actual_duration = len(y) / sr
     except Exception as e:
         return jsonify({'error': 'Decoder error', 'detail': str(e)}), 415
 
@@ -325,7 +318,7 @@ def analyze_full():
             'lufs': lufs,
             'spectrum_summary': spectrum_summary,
             'sample_rate': sr,
-            'analyzed_seconds': analyze_duration,
+            'analyzed_seconds': actual_duration,
         },
         'file': {
             'name': filename,
