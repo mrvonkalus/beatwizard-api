@@ -13,3 +13,4 @@ services:
     region: oregon
     autoDeploy: true
     runtime: docker
+

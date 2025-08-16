@@ -20,3 +20,6 @@ pyloudnorm==0.1.1
 audioread>=3.0.0
 numba==0.60.0
 llvmlite==0.43.0
+
+# MP3 and extended format support
+pydub>=0.25.1

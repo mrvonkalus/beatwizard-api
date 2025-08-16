@@ -1,2 +1,8 @@
+# System dependencies for audio processing
 libsndfile1
 ffmpeg
+libavcodec-extra
+libavformat-dev
+libavutil-dev
+libswresample-dev
+

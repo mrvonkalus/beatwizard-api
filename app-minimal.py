@@ -79,7 +79,7 @@ ALLOWED_EXTENSIONS = {'wav', 'mp3', 'flac', 'm4a', 'aiff', 'ogg'}
 # For analyze-lite specifically (libsndfile-backed formats; mp3 not guaranteed)
 ANALYZE_LITE_ALLOWED_EXTS = {'.wav', '.flac', '.ogg', '.oga', '.aiff', '.aif', '.aifc'}
 # Full analyzer supports the same set for now (MP3 later via ffmpeg/audioread)
-FULL_ANALYZE_ALLOWED_EXTS = ANALYZE_LITE_ALLOWED_EXTS
+FULL_ANALYZE_ALLOWED_EXTS = {'.wav', '.flac', '.mp3', '.m4a', '.aac', '.ogg', '.oga', '.aiff', '.aif', '.aifc'}
 
 # Full analyzer limits
 ANALYZE_SECONDS = int(os.environ.get('BW_ANALYZE_SECONDS', '90'))
@@ -278,7 +278,7 @@ def analyze_full():
         if len(y) == 0:
             return jsonify({'error': 'No audio data loaded'}), 400
             
-        # Debug: Check audio statistics
+        # Enhanced audio statistics
         audio_stats = {
             'samples': len(y),
             'sample_rate': sr,
@@ -286,7 +286,11 @@ def analyze_full():
             'min_amplitude': float(np.min(y)),
             'max_amplitude': float(np.max(y)),
             'mean_amplitude': float(np.mean(y)),
-            'rms': float(np.sqrt(np.mean(y**2)))
+            'rms': float(np.sqrt(np.mean(y**2))),
+            'peak_db': float(20 * np.log10(np.max(np.abs(y)))),
+            'rms_db': float(20 * np.log10(np.sqrt(np.mean(y**2)))),
+            'dynamic_range_db': float(20 * np.log10(np.max(np.abs(y))/np.sqrt(np.mean(y**2)))),
+            'crest_factor': float(np.max(np.abs(y))/np.sqrt(np.mean(y**2)))
         }
         
     except Exception as e:
@@ -296,35 +300,109 @@ def analyze_full():
         return jsonify({'error': 'No audio samples decoded'}), 400
 
     try:
-        # Debug: Check if audio has enough energy for tempo detection
+        # Enhanced rhythm analysis
         if np.sqrt(np.mean(y**2)) < 0.001:  # Very quiet audio
             tempo = None
+            rhythm_analysis = None
         else:
-            tempo, _ = librosa.beat.beat_track(y=y, sr=sr, hop_length=512, start_bpm=120)
+            tempo, beats = librosa.beat.beat_track(y=y, sr=sr, hop_length=512, start_bpm=120)
             tempo = float(tempo)
+            
+            # Onset detection
+            onset_frames = librosa.onset.onset_detect(y=y, sr=sr)
+            onset_times = librosa.frames_to_time(onset_frames, sr=sr)
+            
+            rhythm_analysis = {
+                'tempo_bpm': tempo,
+                'beat_count': len(beats),
+                'beat_interval_sec': 60/tempo,
+                'onset_count': len(onset_frames),
+                'onset_rate_per_sec': len(onset_frames)/actual_duration
+            }
     except Exception as e:
-        print(f"Tempo detection error: {e}")
+        print(f"Rhythm analysis error: {e}")
         tempo = None
+        rhythm_analysis = None
 
     try:
-        # Debug: Use more robust key detection
+        # Enhanced harmonic analysis
         chroma = librosa.feature.chroma_cqt(y=y, sr=sr, hop_length=512)
         pitch_class_strength = chroma.mean(axis=1)
         key_index = int(pitch_class_strength.argmax())
         key_guess = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][key_index]
-        
-        # Debug: Check chroma strength
         chroma_strength = float(np.max(pitch_class_strength))
+        
+        # Harmonic vs percussive separation
+        harmonic, percussive = librosa.effects.hpss(y)
+        harmonic_ratio = np.sum(harmonic**2) / (np.sum(harmonic**2) + np.sum(percussive**2))
+        
+        harmonic_analysis = {
+            'key': key_guess,
+            'chroma_strength': chroma_strength,
+            'harmonic_ratio': float(harmonic_ratio),
+            'percussive_ratio': float(1 - harmonic_ratio)
+        }
     except Exception as e:
-        print(f"Key detection error: {e}")
+        print(f"Harmonic analysis error: {e}")
         key_guess = None
         chroma_strength = None
+        harmonic_analysis = None
 
     try:
+        # Enhanced loudness analysis
         meter = pyln.Meter(sr)
         lufs = float(meter.integrated_loudness(y))
-    except Exception:
+        
+        # Frequency band analysis (7-band)
+        freqs = librosa.fft_frequencies(sr=sr)
+        S = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128)
+        
+        # Define frequency bands (Hz)
+        bands = {
+            'sub_bass': (20, 60),
+            'bass': (60, 250),
+            'low_mid': (250, 500),
+            'mid': (500, 2000),
+            'high_mid': (2000, 4000),
+            'presence': (4000, 6000),
+            'brilliance': (6000, 20000)
+        }
+        
+        frequency_analysis = {}
+        for band_name, (low_freq, high_freq) in bands.items():
+            # Find mel bins for this frequency range
+            mel_low = librosa.hz_to_mel(low_freq)
+            mel_high = librosa.hz_to_mel(high_freq)
+            mel_bins = librosa.mel_frequencies(n_mels=128, fmin=0, fmax=sr//2)
+            band_bins = np.where((mel_bins >= mel_low) & (mel_bins <= mel_high))[0]
+            
+            if len(band_bins) > 0:
+                band_energy = np.mean(S[band_bins, :])
+                frequency_analysis[band_name] = float(band_energy)
+            else:
+                frequency_analysis[band_name] = 0.0
+        
+        # Stereo imaging (if stereo)
+        if len(y.shape) > 1 and y.shape[1] > 1:
+            left = y[:, 0]
+            right = y[:, 1]
+            correlation = np.corrcoef(left, right)[0, 1]
+            stereo_width = float(np.std(left - right))
+        else:
+            correlation = 1.0  # Mono
+            stereo_width = 0.0
+            
+        loudness_analysis = {
+            'lufs': lufs,
+            'stereo_correlation': float(correlation),
+            'stereo_width': float(stereo_width)
+        }
+        
+    except Exception as e:
+        print(f"Loudness analysis error: {e}")
         lufs = None
+        frequency_analysis = {}
+        loudness_analysis = {}
 
     try:
         S = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=64)
@@ -340,23 +418,264 @@ def analyze_full():
     return jsonify({
         'ok': True,
         'analysis': {
-            'tempo_bpm': tempo,
-            'key_guess': key_guess,
-            'lufs': lufs,
-            'spectrum_summary': spectrum_summary,
-            'sample_rate': sr,
-            'analyzed_seconds': actual_duration,
-        },
-        'debug': {
-            'audio_stats': audio_stats,
-            'chroma_strength': chroma_strength if 'chroma_strength' in locals() else None
+            'basic_info': {
+                'duration_sec': actual_duration,
+                'sample_rate': sr,
+                'file_size_mb': len(data) / (1024 * 1024)
+            },
+            'amplitude_dynamics': {
+                'peak_db': audio_stats['peak_db'],
+                'rms_db': audio_stats['rms_db'],
+                'dynamic_range_db': audio_stats['dynamic_range_db'],
+                'crest_factor': audio_stats['crest_factor']
+            },
+            'rhythm': rhythm_analysis,
+            'harmonic': harmonic_analysis,
+            'frequency_bands': frequency_analysis,
+            'loudness': loudness_analysis,
+            'spectrum_summary': spectrum_summary
         },
         'file': {
             'name': filename,
             'size_bytes': len(data),
             'ext': ext
-        }
+        },
+        'beatwizard_ready': True,
+        'chat_available': True
     })
+
+@app.route('/api/beatwizard-chat', methods=['POST'])
+def beatwizard_chat():
+    """
+    🧙‍♂️ THE BEATWIZARD CHATBOT! 
+    Ask the wise music wizard for advice on your track!
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No message provided'}), 400
+            
+        user_message = data.get('message', '').strip()
+        analysis_data = data.get('analysis', {})
+        
+        if not user_message:
+            return jsonify({'error': 'Empty message'}), 400
+            
+        # 🧙‍♂️ BEATWIZARD PERSONALITY & LOGIC
+        response = generate_beatwizard_response(user_message, analysis_data)
+        
+        return jsonify({
+            'ok': True,
+            'beatwizard_response': response,
+            'timestamp': time.time()
+        })
+        
+    except Exception as e:
+        return jsonify({'error': 'Chat error', 'detail': str(e)}), 500
+
+def generate_beatwizard_response(user_message, analysis_data):
+    """
+    🧙‍♂️ Generate BeatWizard's mystical response based on user message and track analysis
+    """
+    # Default mystical greeting
+    if not analysis_data:
+        return {
+            'message': "🧙‍♂️ *adjusts wizard hat* Ah, young producer! I sense you seek the ancient wisdom of the beats, yet no track analysis lies before me. Upload your musical creation first, and then I shall bestow upon you the sacred knowledge of production! ✨",
+            'tone': 'mystical_greeting'
+        }
+    
+    # Extract key metrics for analysis
+    tempo = analysis_data.get('rhythm', {}).get('tempo_bpm')
+    key = analysis_data.get('harmonic', {}).get('key')
+    lufs = analysis_data.get('loudness', {}).get('lufs')
+    dynamic_range = analysis_data.get('amplitude_dynamics', {}).get('dynamic_range_db')
+    bass_energy = analysis_data.get('frequency_bands', {}).get('bass', 0)
+    sub_bass_energy = analysis_data.get('frequency_bands', {}).get('sub_bass', 0)
+    
+    # 🎯 BEATWIZARD RESPONSE LOGIC
+    user_lower = user_message.lower()
+    
+    # Check for specific questions
+    if any(word in user_lower for word in ['suck', 'bad', 'terrible', 'awful', 'trash']):
+        return analyze_track_problems(analysis_data)
+    elif any(word in user_lower for word in ['slap', 'banger', 'hit', 'fire', 'dope']):
+        return provide_banger_advice(analysis_data)
+    elif any(word in user_lower for word in ['tempo', 'bpm', 'speed']):
+        return analyze_tempo(analysis_data)
+    elif any(word in user_lower for word in ['mix', 'mixing', 'balance']):
+        return analyze_mix(analysis_data)
+    elif any(word in user_lower for word in ['bass', 'kick', 'low end']):
+        return analyze_low_end(analysis_data)
+    elif any(word in user_lower for word in ['billie', 'eilish', 'tate', 'mcrae']):
+        return provide_pop_reference_advice(analysis_data)
+    else:
+        return provide_general_advice(analysis_data)
+
+def analyze_track_problems(analysis_data):
+    """🧙‍♂️ Analyze what's wrong with the track"""
+    tempo = analysis_data.get('rhythm', {}).get('tempo_bpm')
+    lufs = analysis_data.get('loudness', {}).get('lufs')
+    dynamic_range = analysis_data.get('amplitude_dynamics', {}).get('dynamic_range_db')
+    
+    issues = []
+    
+    if lufs and lufs > -14:
+        issues.append("🎚️ Your track is TOO LOUD! Modern streaming wants -14 LUFS, but you're at {:.1f} LUFS. Turn it down, young one!".format(lufs))
+    
+    if dynamic_range and dynamic_range < 6:
+        issues.append("📊 Your dynamic range is CRUSHED! Only {:.1f} dB of range? Let your track breathe!".format(dynamic_range))
+    
+    if tempo and (tempo < 80 or tempo > 180):
+        issues.append("⏱️ Your tempo of {:.0f} BPM is in the danger zone! Most hits live between 90-140 BPM.".format(tempo))
+    
+    if not issues:
+        issues.append("✨ Actually... your track doesn't suck! The ancient metrics show promise. What specific aspect troubles you?")
+    
+    return {
+        'message': "🧙‍♂️ *casts diagnostic spell* The mystical analysis reveals:\n\n" + "\n\n".join(issues) + "\n\n*adjusts spectacles* Now, let's fix these issues!",
+        'tone': 'diagnostic',
+        'issues_found': len(issues)
+    }
+
+def provide_banger_advice(analysis_data):
+    """🧙‍♂️ Advice for making it slap like a banger"""
+    tempo = analysis_data.get('rhythm', {}).get('tempo_bpm')
+    bass_energy = analysis_data.get('frequency_bands', {}).get('bass', 0)
+    
+    advice = []
+    
+    if tempo:
+        if tempo < 100:
+            advice.append("⚡ Your {:.0f} BPM is too slow for a banger! Crank it up to 120-140 BPM for that club energy!".format(tempo))
+        elif tempo > 150:
+            advice.append("🔥 Your {:.0f} BPM is fire! Perfect for a high-energy banger!".format(tempo))
+        else:
+            advice.append("🎯 Your {:.0f} BPM is in the sweet spot! This could definitely slap!".format(tempo))
+    
+    if bass_energy < 0.1:
+        advice.append("🔊 Your bass is WEAK! Add a fat 808 or sub-bass around 40-60 Hz to make the club shake!")
+    
+    advice.append("💥 PRO TIP: Layer your drums! Kick + snare + hi-hats + percussion = BANGER FORMULA!")
+    advice.append("🎵 Add vocal chops or melodic hooks to make it memorable!")
+    
+    return {
+        'message': "🧙‍♂️ *summons banger energy* To make your track SLAP like the ancient gods intended:\n\n" + "\n\n".join(advice) + "\n\n*lightning crackles* Now go forth and create FIRE! 🔥",
+        'tone': 'energetic',
+        'banger_potential': 'high'
+    }
+
+def analyze_tempo(analysis_data):
+    """🧙‍♂️ Tempo-specific advice"""
+    tempo = analysis_data.get('rhythm', {}).get('tempo_bpm')
+    
+    if not tempo:
+        return {
+            'message': "🧙‍♂️ *scratches wizard beard* I cannot detect a clear tempo in your track. Are you sure there's a beat?",
+            'tone': 'confused'
+        }
+    
+    tempo_advice = {
+        'slow': "🐌 Your {:.0f} BPM is SLOW! Perfect for ambient, chill vibes, or emotional ballads.",
+        'medium': "🎯 Your {:.0f} BPM is GOLDILOCKS! Not too fast, not too slow - just right for pop, hip-hop, or R&B!",
+        'fast': "⚡ Your {:.0f} BPM is FAST! Perfect for EDM, house, or high-energy tracks!"
+    }
+    
+    if tempo < 90:
+        category = 'slow'
+    elif tempo < 140:
+        category = 'medium'
+    else:
+        category = 'fast'
+    
+    return {
+        'message': "🧙‍♂️ *taps rhythm staff* " + tempo_advice[category].format(tempo),
+        'tone': 'rhythmic',
+        'tempo_category': category
+    }
+
+def analyze_mix(analysis_data):
+    """🧙‍♂️ Mix analysis and advice"""
+    lufs = analysis_data.get('loudness', {}).get('lufs')
+    dynamic_range = analysis_data.get('amplitude_dynamics', {}).get('dynamic_range_db')
+    frequency_bands = analysis_data.get('frequency_bands', {})
+    
+    mix_advice = []
+    
+    if lufs and lufs > -14:
+        mix_advice.append("🎚️ Your mix is TOO HOT! Target -14 LUFS for streaming. Use a limiter, young one!")
+    
+    if dynamic_range and dynamic_range < 8:
+        mix_advice.append("📊 Your mix is CRUSHED! Aim for 8-12 dB of dynamic range for breathing room.")
+    
+    bass = frequency_bands.get('bass', 0)
+    mid = frequency_bands.get('mid', 0)
+    high = frequency_bands.get('presence', 0) + frequency_bands.get('brilliance', 0)
+    
+    if bass > mid * 2:
+        mix_advice.append("🔊 Your bass is DOMINATING! Balance it with your mids around 1-4 kHz.")
+    elif mid > bass * 2:
+        mix_advice.append("🎵 Your mids are THIN! Add some warmth in the 200-800 Hz range.")
+    
+    return {
+        'message': "🧙‍♂️ *casts mixing spell* Your mix analysis reveals:\n\n" + "\n\n".join(mix_advice) + "\n\n*adjusts spectral glasses* These adjustments will bring balance to your track!",
+        'tone': 'technical',
+        'mix_issues': len(mix_advice)
+    }
+
+def analyze_low_end(analysis_data):
+    """🧙‍♂️ Low-end specific advice"""
+    bass_energy = analysis_data.get('frequency_bands', {}).get('bass', 0)
+    sub_bass_energy = analysis_data.get('frequency_bands', {}).get('sub_bass', 0)
+    
+    if bass_energy < 0.1:
+        return {
+            'message': "🔊 *thunder rumbles* Your bass is WEAK! Add a fat 808 or sub-bass around 40-60 Hz. Make the club SHAKE!",
+            'tone': 'thunderous'
+        }
+    elif bass_energy > 0.5:
+        return {
+            'message': "💥 *earth trembles* Your bass is MASSIVE! Be careful not to muddy your mix. High-pass your kick at 30 Hz!",
+            'tone': 'powerful'
+        }
+    else:
+        return {
+            'message': "🎯 Your bass is BALANCED! Good job, young producer. Consider layering with a sub-bass for extra weight!",
+            'tone': 'approving'
+        }
+
+def provide_pop_reference_advice(analysis_data):
+    """🧙‍♂️ Billie Eilish / Tate McRae style advice"""
+    tempo = analysis_data.get('rhythm', {}).get('tempo_bpm')
+    lufs = analysis_data.get('loudness', {}).get('lufs')
+    
+    advice = []
+    
+    if tempo:
+        if tempo < 80:
+            advice.append("🎤 Your {:.0f} BPM is perfect for that Billie-style emotional ballad!")
+        elif tempo < 120:
+            advice.append("💃 Your {:.0f} BPM is ideal for Tate McRae-style pop bangers!")
+        else:
+            advice.append("⚡ Your {:.0f} BPM is too fast for pop vocals! Slow it down for that radio-friendly feel!")
+    
+    advice.append("🎵 Add space in your arrangement - let the vocals breathe!")
+    advice.append("🎚️ Use reverb and delay for that dreamy pop atmosphere!")
+    advice.append("🎤 Layer your vocals - main + harmonies + ad-libs = POP MAGIC!")
+    
+    return {
+        'message': "🧙‍♂️ *summons pop magic* To channel the spirits of Billie and Tate:\n\n" + "\n\n".join(advice) + "\n\n*sparkles shimmer* Now create that radio-ready magic! ✨",
+        'tone': 'pop_magical',
+        'pop_potential': 'high'
+    }
+
+def provide_general_advice(analysis_data):
+    """🧙‍♂️ General BeatWizard wisdom"""
+    return {
+        'message': "🧙‍♂️ *adjusts wizard robes* Ah, young producer! Your track shows promise, but remember the ancient wisdom:\n\n🎵 Music is emotion in motion\n🎚️ Less is often more\n🎤 Let your vocals shine\n🔊 Bass is the foundation\n⚡ Energy comes from contrast\n\n*staff glows* What specific aspect of your track would you like me to analyze?",
+        'tone': 'wise',
+        'wisdom_level': 'ancient'
+    }
+
 @app.route('/api/analyze-lite', methods=['POST'])
 def analyze_lite():
     """
