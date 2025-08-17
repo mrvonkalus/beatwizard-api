@@ -583,6 +583,8 @@ def generate_beatwizard_response(user_message, analysis_data):
         return provide_banger_advice(analysis_data)
     elif any(word in user_lower for word in ['tempo', 'bpm', 'speed']):
         return analyze_tempo(analysis_data)
+    elif any(word in user_lower for word in ['key', 'scale', 'harmonic', 'chord']):
+        return analyze_key(analysis_data)
     elif any(word in user_lower for word in ['mix', 'mixing', 'balance']):
         return analyze_mix(analysis_data)
     elif any(word in user_lower for word in ['bass', 'kick', 'low end']):
@@ -674,6 +676,60 @@ def analyze_tempo(analysis_data):
         'tempo_category': category
     }
 
+def analyze_key(analysis_data):
+    """🧙‍♂️ Key and harmonic analysis"""
+    key = analysis_data.get('harmonic', {}).get('key')
+    tempo = analysis_data.get('rhythm', {}).get('tempo_bpm')
+    chroma_strength = analysis_data.get('harmonic', {}).get('chroma_strength', 0)
+    
+    if not key:
+        return {
+            'message': "🧙‍♂️ *squints at harmonic crystals* The ancient spirits are unclear about your key signature... Perhaps the track needs stronger melodic content for the mystical algorithms to detect! ✨",
+            'tone': 'mystical',
+            'key_confidence': 'low'
+        }
+    
+    # Key-specific advice based on musical theory
+    key_advice = {
+        'C': "🎹 C major - The foundation of all music! Pure, simple, and powerful. Great for pop and accessible melodies.",
+        'C#': "✨ C# major - The sharp and sophisticated choice! Creates tension and brightness.",
+        'D': "🌅 D major - The key of celebration! Triumphant and uplifting, perfect for anthems.",
+        'D#': "🔥 D# major - Bold and dramatic! This key commands attention.",
+        'E': "⚡ E major - Electric energy! Great for rock and energetic pop tracks.",
+        'F': "🎵 F major - Warm and comfortable! The key of contentment and gentle power.",
+        'F#': "🌟 F# major - Bright and shimmering! Creates beautiful harmonic textures.",
+        'G': "🎶 G major - The people's key! Natural and flowing, loved by guitarists.",
+        'G#': "💫 G# major - Exotic and mysterious! Creates unique sonic landscapes.",
+        'A': "🎸 A major - Confident and strong! The guitarist's favorite for good reason.",
+        'A#': "🎺 A# major - Rich and full! Perfect for brass and powerful arrangements.",
+        'B': "🌙 B major - Ethereal and dreamy! Creates floating, otherworldly feelings."
+    }
+    
+    # Tempo + Key combo advice
+    if tempo and key:
+        if tempo >= 120 and key in ['E', 'A', 'D']:
+            extra_advice = "\n\n🔥 Your {} at {}BPM combo is FIRE for dance music! This pairing creates instant energy!".format(key, int(tempo))
+        elif tempo < 100 and key in ['F', 'C', 'G']:
+            extra_advice = "\n\n💫 Your {} at {}BPM creates a beautiful, contemplative vibe. Perfect for emotional storytelling!".format(key, int(tempo))
+        elif key in ['F#', 'C#', 'G#']:
+            extra_advice = "\n\n✨ Sharp keys like {} add sophistication! You're thinking like a pro producer.".format(key)
+        else:
+            extra_advice = "\n\n🎵 Your {} key at {}BPM creates a solid foundation for your track!".format(key, int(tempo))
+    else:
+        extra_advice = ""
+    
+    base_message = key_advice.get(key, f"🎵 {key} - An interesting harmonic choice!")
+    confidence_note = ""
+    if chroma_strength < 0.3:
+        confidence_note = "\n\n🔮 (The harmonic detection is a bit uncertain - consider strengthening your melodic elements!)"
+    
+    return {
+        'message': f"🧙‍♂️ *consulting the Circle of Fifths* Your track resonates in **{key}**!\n\n{base_message}{extra_advice}{confidence_note}",
+        'tone': 'harmonic',
+        'detected_key': key,
+        'key_confidence': 'high' if chroma_strength > 0.5 else 'medium' if chroma_strength > 0.3 else 'low'
+    }
+
 def analyze_mix(analysis_data):
     """🧙‍♂️ Mix analysis and advice"""
     lufs = analysis_data.get('loudness', {}).get('lufs')
@@ -750,9 +806,37 @@ def provide_pop_reference_advice(analysis_data):
     }
 
 def provide_general_advice(analysis_data):
-    """🧙‍♂️ General BeatWizard wisdom"""
+    """🧙‍♂️ General BeatWizard wisdom with track specifics"""
+    tempo = analysis_data.get('rhythm', {}).get('tempo_bpm')
+    key = analysis_data.get('harmonic', {}).get('key')
+    lufs = analysis_data.get('loudness', {}).get('lufs')
+    duration = analysis_data.get('basic_info', {}).get('duration_sec')
+    
+    # Build personalized message based on track analysis
+    track_info = []
+    if tempo:
+        track_info.append(f"🎵 Tempo: {tempo:.1f} BPM")
+    if key:
+        track_info.append(f"🎹 Key: {key}")
+    if duration:
+        track_info.append(f"⏱️ Duration: {duration:.1f}s")
+    
+    track_summary = ""
+    if track_info:
+        track_summary = "Your track analysis:\n" + " • ".join(track_info) + "\n\n"
+    
+    # Give specific advice based on tempo
+    tempo_wisdom = ""
+    if tempo:
+        if tempo < 90:
+            tempo_wisdom = "🐌 Your slow tempo creates space for emotional depth - use it wisely!\n"
+        elif tempo > 140:
+            tempo_wisdom = "⚡ Your fast tempo demands tight arrangements - every element must earn its place!\n"
+        else:
+            tempo_wisdom = "🎯 Your tempo is in the sweet spot for most genres - solid foundation!\n"
+    
     return {
-        'message': "🧙‍♂️ *adjusts wizard robes* Ah, young producer! Your track shows promise, but remember the ancient wisdom:\n\n🎵 Music is emotion in motion\n🎚️ Less is often more\n🎤 Let your vocals shine\n🔊 Bass is the foundation\n⚡ Energy comes from contrast\n\n*staff glows* What specific aspect of your track would you like me to analyze?",
+        'message': f"🧙‍♂️ *consulting the mystical analysis scrolls*\n\n{track_summary}{tempo_wisdom}Remember the ancient production wisdom:\n\n🎵 Music is emotion in motion\n🎚️ Less is often more\n🎤 Let your vocals shine\n🔊 Bass is the foundation\n⚡ Energy comes from contrast\n\n*staff glows* Ask me about your **tempo**, **key**, **mix**, or how to make it **slap like a banger**! ✨",
         'tone': 'wise',
         'wisdom_level': 'ancient'
     }
