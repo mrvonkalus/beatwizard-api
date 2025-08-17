@@ -19,6 +19,13 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+# Supabase integration for user authentication and data storage
+try:
+    from supabase import create_client, Client
+    SUPABASE_AVAILABLE = True
+except Exception:
+    SUPABASE_AVAILABLE = False
+
 # Analyze-Lite deps
 try:
     import numpy as np  # type: ignore
@@ -47,6 +54,18 @@ except ImportError:
 
 # Initialize Flask app
 app = Flask(__name__)
+
+# Initialize Supabase client
+supabase_client = None
+if SUPABASE_AVAILABLE:
+    try:
+        SUPABASE_URL = "https://rrmoicsnssfbflkbqcek.supabase.co"
+        SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJybW9pY3Nuc3NmYmZsa2JxY2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MzU2NjgsImV4cCI6MjA2OTUxMTY2OH0.hQvp5-KQ3NunGvt7rayrXLAgr7GG4O49brkNVDhJO88"
+        supabase_client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+        print("✅ Supabase client initialized")
+    except Exception as e:
+        print(f"❌ Failed to initialize Supabase client: {e}")
+        supabase_client = None
 
 # Production configuration
 max_upload_mb_env = os.environ.get('BW_MAX_UPLOAD_MB', '25')
@@ -236,6 +255,48 @@ def upload_placeholder():
     })
 
 
+def get_user_from_token(auth_header):
+    """Extract user ID from Authorization header token"""
+    if not auth_header or not supabase_client:
+        return None
+    
+    try:
+        # Extract token from "Bearer TOKEN" format
+        if not auth_header.startswith('Bearer '):
+            return None
+        token = auth_header[7:]  # Remove "Bearer " prefix
+        
+        # Verify token with Supabase
+        user_response = supabase_client.auth.get_user(token)
+        if user_response and user_response.user:
+            return user_response.user.id
+    except Exception as e:
+        print(f"Auth error: {e}")
+    
+    return None
+
+def save_analysis_to_database(user_id, filename, file_size, file_ext, analysis_data):
+    """Save analysis data to Supabase database"""
+    if not supabase_client or not user_id:
+        return False
+    
+    try:
+        result = supabase_client.table('analyses').insert({
+            'user_id': user_id,
+            'file_name': filename,
+            'file_size_bytes': file_size,
+            'file_ext': file_ext,
+            'analysis_data': analysis_data
+        }).execute()
+        
+        if result.data:
+            print(f"✅ Analysis saved to database for user {user_id}")
+            return True
+    except Exception as e:
+        print(f"❌ Failed to save analysis: {e}")
+    
+    return False
+
 @app.route('/api/analyze', methods=['POST'])
 def analyze_full():
     """
@@ -415,7 +476,8 @@ def analyze_full():
     except Exception:
         spectrum_summary = None
 
-    return jsonify({
+    # Build the complete analysis response
+    analysis_response = {
         'ok': True,
         'analysis': {
             'basic_info': {
@@ -442,7 +504,26 @@ def analyze_full():
         },
         'beatwizard_ready': True,
         'chat_available': True
-    })
+    }
+
+    # Check if user is authenticated and save analysis to database
+    auth_header = request.headers.get('Authorization')
+    user_id = get_user_from_token(auth_header)
+    
+    if user_id and supabase_client:
+        # Save analysis to user's library
+        saved = save_analysis_to_database(
+            user_id=user_id,
+            filename=filename,
+            file_size=len(data),
+            file_ext=ext,
+            analysis_data=analysis_response
+        )
+        analysis_response['saved_to_library'] = saved
+    else:
+        analysis_response['saved_to_library'] = False
+
+    return jsonify(analysis_response)
 
 @app.route('/api/beatwizard-chat', methods=['POST'])
 def beatwizard_chat():

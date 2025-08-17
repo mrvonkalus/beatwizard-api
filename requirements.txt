@@ -23,3 +23,6 @@ llvmlite==0.43.0
 
 # MP3 and extended format support
 pydub>=0.25.1
+
+# Database & Auth
+supabase>=2.0.0
