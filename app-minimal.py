@@ -556,45 +556,789 @@ def beatwizard_chat():
 
 def generate_beatwizard_response(user_message, analysis_data):
     """
-    🧙‍♂️ Generate BeatWizard's mystical response based on user message and track analysis
+    🧙‍♂️ THE BEATWIZARD - RULES OF WISDOM
+    
+    THE SACRED COMMANDMENTS:
+    1. THOU SHALL NEVER speak without referencing the Analysis Data
+    2. THOU SHALL ALWAYS cite specific numerical values 
+    3. THOU SHALL NOT give generic advice - only data-driven insights
+    4. THOU SHALL ground every statement in measurable metrics
+    5. THOU SHALL be the oracle of the numbers, not the purveyor of platitudes
     """
-    # Default mystical greeting
+    
+    # RULE #1: NO ANALYSIS = NO WISDOM
     if not analysis_data:
         return {
-            'message': "🧙‍♂️ *adjusts wizard hat* Ah, young producer! I sense you seek the ancient wisdom of the beats, yet no track analysis lies before me. Upload your musical creation first, and then I shall bestow upon you the sacred knowledge of production! ✨",
+            'message': "🧙‍♂️ *staff dims* I cannot cast wisdom without the sacred numbers! Upload your track for analysis first, young producer, and I shall read the numerical prophecies within your music! ✨",
             'tone': 'mystical_greeting'
         }
     
-    # Extract key metrics for analysis
+    # EXTRACT ALL SACRED METRICS
     tempo = analysis_data.get('rhythm', {}).get('tempo_bpm')
     key = analysis_data.get('harmonic', {}).get('key')
-    lufs = analysis_data.get('loudness', {}).get('lufs')
-    dynamic_range = analysis_data.get('amplitude_dynamics', {}).get('dynamic_range_db')
-    bass_energy = analysis_data.get('frequency_bands', {}).get('bass', 0)
-    sub_bass_energy = analysis_data.get('frequency_bands', {}).get('sub_bass', 0)
+    duration = analysis_data.get('basic_info', {}).get('duration_sec')
     
-    # 🎯 BEATWIZARD RESPONSE LOGIC
+    # Amplitude & Dynamics
+    peak_db = analysis_data.get('amplitude_dynamics', {}).get('peak_db')
+    rms_db = analysis_data.get('amplitude_dynamics', {}).get('rms_db')
+    dynamic_range = analysis_data.get('amplitude_dynamics', {}).get('dynamic_range_db')
+    crest_factor = analysis_data.get('amplitude_dynamics', {}).get('crest_factor')
+    
+    # Loudness
+    lufs = analysis_data.get('loudness', {}).get('lufs')
+    stereo_correlation = analysis_data.get('loudness', {}).get('stereo_correlation')
+    stereo_width = analysis_data.get('loudness', {}).get('stereo_width')
+    
+    # Frequency Bands
+    freq_bands = analysis_data.get('frequency_bands', {})
+    sub_bass = freq_bands.get('sub_bass', 0)
+    bass = freq_bands.get('bass', 0)
+    low_mid = freq_bands.get('low_mid', 0)
+    mid = freq_bands.get('mid', 0)
+    high_mid = freq_bands.get('high_mid', 0)
+    presence = freq_bands.get('presence', 0)
+    brilliance = freq_bands.get('brilliance', 0)
+    
+    # Harmonic Analysis
+    harmonic_ratio = analysis_data.get('harmonic', {}).get('harmonic_ratio')
+    percussive_ratio = analysis_data.get('harmonic', {}).get('percussive_ratio')
+    spectral_centroid = analysis_data.get('harmonic', {}).get('spectral_centroid_hz')
+    zero_crossing_rate = analysis_data.get('harmonic', {}).get('zero_crossing_rate')
+    
+    # 🎯 THE WISDOM ENGINE - ALWAYS DATA-DRIVEN
+    return analyze_and_respond_with_data(
+        user_message=user_message,
+        tempo=tempo, key=key, duration=duration,
+        peak_db=peak_db, rms_db=rms_db, dynamic_range=dynamic_range, crest_factor=crest_factor,
+        lufs=lufs, stereo_correlation=stereo_correlation, stereo_width=stereo_width,
+        sub_bass=sub_bass, bass=bass, low_mid=low_mid, mid=mid, 
+        high_mid=high_mid, presence=presence, brilliance=brilliance,
+        harmonic_ratio=harmonic_ratio, percussive_ratio=percussive_ratio,
+        spectral_centroid=spectral_centroid, zero_crossing_rate=zero_crossing_rate
+    )
+
+def analyze_and_respond_with_data(user_message, **metrics):
+    """
+    🧙‍♂️ THE WISDOM ENGINE - 100% DATA-DRIVEN RESPONSES
+    
+    EVERY response MUST cite specific numbers from the analysis.
+    NO generic advice allowed. ONLY data-grounded insights.
+    """
+    
+    # Build the data summary for context
+    data_summary = build_data_summary(**metrics)
+    
+    # Analyze the user's intent and respond with SPECIFIC DATA
     user_lower = user_message.lower()
     
-    # Check for specific questions
-    if any(word in user_lower for word in ['suck', 'bad', 'terrible', 'awful', 'trash']):
-        return analyze_track_problems(analysis_data)
-    elif any(word in user_lower for word in ['slap', 'banger', 'hit', 'fire', 'dope']):
-        return provide_banger_advice(analysis_data)
-    elif any(word in user_lower for word in ['tempo', 'bpm', 'speed']):
-        return analyze_tempo(analysis_data)
-    elif any(word in user_lower for word in ['key', 'scale', 'harmonic', 'chord']):
-        return analyze_key(analysis_data)
-    elif any(word in user_lower for word in ['mix', 'mixing', 'balance']):
-        return analyze_mix(analysis_data)
-    elif any(word in user_lower for word in ['bass', 'kick', 'low end']):
-        return analyze_low_end(analysis_data)
-    elif any(word in user_lower for word in ['billie', 'eilish', 'tate', 'mcrae']):
-        return provide_pop_reference_advice(analysis_data)
+    # TEMPO ANALYSIS - Always cite the actual BPM
+    if any(word in user_lower for word in ['tempo', 'bpm', 'speed', 'fast', 'slow']):
+        return respond_with_tempo_data(data_summary, **metrics)
+    
+    # KEY ANALYSIS - Always cite the actual key
+    elif any(word in user_lower for word in ['key', 'scale', 'harmonic', 'chord', 'pitch']):
+        return respond_with_key_data(data_summary, **metrics)
+    
+    # MIX ANALYSIS - Always cite LUFS, dynamics, frequency balance
+    elif any(word in user_lower for word in ['mix', 'mixing', 'balance', 'loud', 'quiet']):
+        return respond_with_mix_data(data_summary, **metrics)
+    
+    # BASS ANALYSIS - Always cite bass & sub-bass levels
+    elif any(word in user_lower for word in ['bass', 'kick', 'low end', 'sub']):
+        return respond_with_bass_data(data_summary, **metrics)
+    
+    # STEREO ANALYSIS - Always cite stereo correlation & width
+    elif any(word in user_lower for word in ['stereo', 'width', 'image', 'imaging', 'wide', 'narrow']):
+        return respond_with_stereo_data(data_summary, **metrics)
+    
+    # DYNAMICS ANALYSIS - Always cite dynamic range & crest factor
+    elif any(word in user_lower for word in ['dynamics', 'compressed', 'punch', 'impact']):
+        return respond_with_dynamics_data(data_summary, **metrics)
+    
+    # FREQUENCY ANALYSIS - Always cite the 7-band breakdown
+    elif any(word in user_lower for word in ['frequency', 'bands', 'eq', 'bright', 'dark', 'muddy']):
+        return respond_with_frequency_data(data_summary, **metrics)
+    
+    # GENRE ANALYSIS - Based on tempo, key, and spectral characteristics
     elif any(word in user_lower for word in ['genre', 'style', 'type', 'category', 'fits']):
-        return analyze_genre(analysis_data)
+        return respond_with_genre_data(data_summary, **metrics)
+    
+    # PROBLEMS ANALYSIS - Identify specific issues with numbers
+    elif any(word in user_lower for word in ['problem', 'issue', 'wrong', 'bad', 'fix']):
+        return respond_with_problems_data(data_summary, **metrics)
+    
+    # COMPREHENSIVE ANALYSIS - All metrics
+    elif any(word in user_lower for word in ['everything', 'all', 'full', 'complete', 'detailed', 'track']):
+        return respond_with_comprehensive_data(data_summary, **metrics)
+    
+    # DEFAULT: TRACK OVERVIEW with key metrics
     else:
-        return provide_general_advice(analysis_data)
+        return respond_with_overview_data(data_summary, **metrics)
+
+def build_data_summary(**metrics):
+    """Build a comprehensive summary of all analysis metrics"""
+    return {
+        'tempo': metrics.get('tempo'),
+        'key': metrics.get('key'),
+        'duration': metrics.get('duration'),
+        'peak_db': metrics.get('peak_db'),
+        'rms_db': metrics.get('rms_db'),
+        'dynamic_range': metrics.get('dynamic_range'),
+        'crest_factor': metrics.get('crest_factor'),
+        'lufs': metrics.get('lufs'),
+        'stereo_correlation': metrics.get('stereo_correlation'),
+        'stereo_width': metrics.get('stereo_width'),
+        'sub_bass': metrics.get('sub_bass'),
+        'bass': metrics.get('bass'),
+        'low_mid': metrics.get('low_mid'),
+        'mid': metrics.get('mid'),
+        'high_mid': metrics.get('high_mid'),
+        'presence': metrics.get('presence'),
+        'brilliance': metrics.get('brilliance'),
+        'harmonic_ratio': metrics.get('harmonic_ratio'),
+        'percussive_ratio': metrics.get('percussive_ratio'),
+        'spectral_centroid': metrics.get('spectral_centroid'),
+        'zero_crossing_rate': metrics.get('zero_crossing_rate')
+    }
+
+def respond_with_tempo_data(data_summary, **metrics):
+    """ALWAYS cite the exact BPM and tempo characteristics"""
+    tempo = data_summary['tempo']
+    if tempo is None:
+        return {
+            'message': "🧙‍♂️ *peers through crystal ball* The tempo spirits have not revealed themselves in your track's analysis data. This suggests either no clear rhythm pattern or an analysis limitation.",
+            'tone': 'data_missing'
+        }
+    
+    # Tempo categorization based on actual BPM
+    if tempo < 70:
+        tempo_category = "BALLAD territory"
+        genre_context = "perfect for emotional, slow builds"
+    elif tempo < 90:
+        tempo_category = "DOWNTEMPO/CHILL"
+        genre_context = "ideal for lo-fi, ambient, or R&B"
+    elif tempo < 100:
+        tempo_category = "MODERATE pace"
+        genre_context = "versatile for pop, hip-hop, or rock"
+    elif tempo < 120:
+        tempo_category = "ENERGETIC"
+        genre_context = "great for pop, dance, or upbeat hip-hop"
+    elif tempo < 140:
+        tempo_category = "HIGH ENERGY"
+        genre_context = "perfect for house, techno, or EDM"
+    else:
+        tempo_category = "EXTREME ENERGY"
+        genre_context = "hardcore EDM, drum & bass, or metal territory"
+    
+    message = f"**TEMPO ANALYSIS: {tempo:.1f} BPM**\n\n"
+    message += f"🎯 Your track sits in **{tempo_category}** - {genre_context}.\n\n"
+    
+    # Tempo-specific production advice
+    if tempo < 85:
+        message += f"**Production Insight:** At {tempo:.1f} BPM, focus on:\n"
+        message += "• Lush reverbs and atmospheric textures\n"
+        message += "• Longer attack times on instruments\n"
+        message += "• Wide, spacious mixing\n"
+    elif tempo > 130:
+        message += f"**Production Insight:** At {tempo:.1f} BPM, prioritize:\n"
+        message += "• Tight, punchy drums\n"
+        message += "• Short reverb tails to avoid muddiness\n"
+        message += "• Clear separation between elements\n"
+    else:
+        message += f"**Production Insight:** {tempo:.1f} BPM is the sweet spot for:\n"
+        message += "• Balanced dynamics\n"
+        message += "• Versatile arrangement choices\n"
+        message += "• Wide commercial appeal\n"
+    
+    return {
+        'message': message,
+        'tone': 'analytical',
+        'cited_data': f"tempo: {tempo:.1f} BPM"
+    }
+
+def respond_with_key_data(data_summary, **metrics):
+    """ALWAYS cite the exact key and harmonic characteristics"""
+    key = data_summary['key']
+    harmonic_ratio = data_summary['harmonic_ratio']
+    percussive_ratio = data_summary['percussive_ratio']
+    
+    if key is None:
+        return {
+            'message': "🧙‍♂️ *adjusts harmonic lens* The key signature remains hidden in your track's harmonic mysteries. This could indicate an atonal piece, heavy modulation, or predominantly percussive content.",
+            'tone': 'data_missing'
+        }
+    
+    message = f"**KEY ANALYSIS: {key}**\n\n"
+    
+    # Key characteristics and mood
+    key_moods = {
+        'C': "Innocent, pure, simple",
+        'C#': "Passionate, grief, despair", 'Db': "Passionate, grief, despair",
+        'D': "Triumphant, martial, joyful",
+        'D#': "Feelings of despair", 'Eb': "Love, devotion, intimate",
+        'E': "Bright, joyful, confident",
+        'F': "Pastoral, peaceful, simple",
+        'F#': "Sharp, melancholic", 'Gb': "Tender, soft, intimate",
+        'G': "Rustic, cheerful, pastoral",
+        'G#': "Gracefulness, flute-like", 'Ab': "Death, eternity, judgment",
+        'A': "Confident, bright, hopeful",
+        'A#': "Mournful, restless", 'Bb': "Magnificent, joyful",
+        'B': "Harsh, piercing, angry"
+    }
+    
+    mood = key_moods.get(key, "Dynamic and expressive")
+    message += f"🎭 **Emotional Character:** {mood}\n\n"
+    
+    # Harmonic vs Percussive content
+    if harmonic_ratio is not None and percussive_ratio is not None:
+        message += f"**Musical Content Analysis:**\n"
+        message += f"• Harmonic Content: {harmonic_ratio:.2f} ({harmonic_ratio*100:.0f}%)\n"
+        message += f"• Percussive Content: {percussive_ratio:.2f} ({percussive_ratio*100:.0f}%)\n\n"
+        
+        if harmonic_ratio > 0.6:
+            content_type = "MELODIC-DOMINANT"
+            advice = "Focus on chord progressions, melodic hooks, and harmonic layering"
+        elif percussive_ratio > 0.6:
+            content_type = "RHYTHM-DOMINANT"
+            advice = "Emphasize drum patterns, percussion, and rhythmic elements"
+        else:
+            content_type = "BALANCED"
+            advice = "Great balance between melodic and rhythmic elements"
+        
+        message += f"**Content Type:** {content_type}\n"
+        message += f"**Production Focus:** {advice}\n"
+    
+    # Key-specific production advice
+    message += f"\n**Key-Specific Production Tips for {key}:**\n"
+    if key in ['C', 'G', 'D', 'A', 'E']:
+        message += "• Major key brightness - perfect for uplifting, commercial tracks\n"
+        message += "• Use open voicings and bright timbres\n"
+    elif key in ['Am', 'Em', 'Bm', 'F#m', 'C#m']:
+        message += "• Minor key depth - ideal for emotional, introspective content\n"
+        message += "• Layer with darker timbres and rich harmonics\n"
+    
+    return {
+        'message': message,
+        'tone': 'harmonic_analytical',
+        'cited_data': f"key: {key}, harmonic_ratio: {harmonic_ratio}, percussive_ratio: {percussive_ratio}"
+    }
+
+def respond_with_overview_data(data_summary, **metrics):
+    """DEFAULT: Comprehensive overview citing key metrics"""
+    tempo = data_summary['tempo']
+    key = data_summary['key']
+    duration = data_summary['duration']
+    lufs = data_summary['lufs']
+    dynamic_range = data_summary['dynamic_range']
+    
+    message = "**TRACK OVERVIEW - THE NUMBERS REVEALED**\n\n"
+    
+    # Core metrics
+    if tempo is not None:
+        message += f"🎵 **Tempo:** {tempo:.1f} BPM\n"
+    if key is not None:
+        message += f"🎼 **Key:** {key}\n"
+    if duration is not None:
+        message += f"⏱️ **Duration:** {duration:.1f} seconds\n"
+    
+    # Loudness & Dynamics
+    if lufs is not None:
+        streaming_status = "GOOD" if -16 <= lufs <= -12 else "NEEDS ADJUSTMENT"
+        message += f"🔊 **LUFS:** {lufs:.1f} dB ({streaming_status} for streaming)\n"
+    
+    if dynamic_range is not None:
+        dr_status = "EXCELLENT" if dynamic_range > 15 else "GOOD" if dynamic_range > 10 else "COMPRESSED"
+        message += f"📊 **Dynamic Range:** {dynamic_range:.1f} dB ({dr_status})\n"
+    
+    message += "\n**Ask me about any specific aspect:**\n"
+    message += "• **'tempo'** - detailed BPM analysis\n"
+    message += "• **'mix'** - loudness, dynamics, frequency balance\n"
+    message += "• **'bass'** - low-end analysis\n"
+    message += "• **'stereo'** - stereo imaging analysis\n"
+    message += "• **'everything'** - comprehensive breakdown\n"
+    
+    cited_metrics = []
+    if tempo: cited_metrics.append(f"tempo: {tempo:.1f}")
+    if key: cited_metrics.append(f"key: {key}")
+    if lufs: cited_metrics.append(f"lufs: {lufs:.1f}")
+    if dynamic_range: cited_metrics.append(f"dynamic_range: {dynamic_range:.1f}")
+    
+    return {
+        'message': message,
+        'tone': 'overview_analytical',
+        'cited_data': ", ".join(cited_metrics)
+    }
+
+def respond_with_mix_data(data_summary, **metrics):
+    """ALWAYS cite LUFS, dynamics, and frequency balance numbers"""
+    lufs = data_summary['lufs']
+    dynamic_range = data_summary['dynamic_range']
+    peak_db = data_summary['peak_db']
+    
+    message = "**MIX ANALYSIS - PRECISE MEASUREMENTS**\n\n"
+    
+    # LUFS Analysis
+    if lufs is not None:
+        if lufs > -12:
+            loudness_verdict = "TOO LOUD - streaming platforms will turn it down"
+            recommendation = f"Lower to -14 LUFS (reduce by {lufs - (-14):.1f} dB)"
+        elif lufs < -18:
+            loudness_verdict = "TOO QUIET - listeners may skip"
+            recommendation = f"Raise to -14 LUFS (increase by {(-14) - lufs:.1f} dB)"
+        else:
+            loudness_verdict = "PERFECT for streaming platforms"
+            recommendation = "Maintain this loudness level"
+        
+        message += f"🔊 **LUFS: {lufs:.1f} dB**\n"
+        message += f"Status: {loudness_verdict}\n"
+        message += f"Action: {recommendation}\n\n"
+    
+    # Dynamic Range Analysis
+    if dynamic_range is not None:
+        if dynamic_range < 6:
+            dynamics_verdict = "HEAVILY COMPRESSED - lacks breathing room"
+            dynamics_advice = "Reduce compression ratio, use parallel compression"
+        elif dynamic_range < 10:
+            dynamics_verdict = "COMPRESSED - typical modern production"
+            dynamics_advice = "Good balance, consider slight compression reduction for more life"
+        elif dynamic_range > 15:
+            dynamics_verdict = "EXCELLENT DYNAMICS - very musical"
+            dynamics_advice = "Maintain this natural dynamic range"
+        else:
+            dynamics_verdict = "GOOD DYNAMICS - well balanced"
+            dynamics_advice = "Solid dynamic range for modern production"
+        
+        message += f"📊 **Dynamic Range: {dynamic_range:.1f} dB**\n"
+        message += f"Assessment: {dynamics_verdict}\n"
+        message += f"Advice: {dynamics_advice}\n\n"
+    
+    # Peak Analysis
+    if peak_db is not None:
+        if peak_db > -0.1:
+            peak_verdict = "CLIPPING RISK - may cause distortion"
+        elif peak_db > -3:
+            peak_verdict = "VERY HOT - little headroom"
+        else:
+            peak_verdict = "GOOD HEADROOM - safe peak levels"
+        
+        message += f"⚡ **Peak Level: {peak_db:.1f} dB**\n"
+        message += f"Status: {peak_verdict}\n\n"
+    
+    # Frequency Balance
+    bass = data_summary['bass'] or 0
+    mid = data_summary['mid'] or 0
+    presence = data_summary['presence'] or 0
+    
+    message += "**Frequency Balance:**\n"
+    message += f"• Bass (60-250Hz): {bass:.3f}\n"
+    message += f"• Mids (1-4kHz): {mid:.3f}\n"
+    message += f"• Presence (8-16kHz): {presence:.3f}\n\n"
+    
+    # Balance Assessment
+    if bass > mid * 2:
+        message += "⚠️ **Issue:** Bass is overpowering - reduce 80-200Hz or boost mids\n"
+    elif mid < 0.05:
+        message += "⚠️ **Issue:** Vocals/instruments will lack clarity - boost 1-4kHz\n"
+    elif presence > 0.3:
+        message += "⚠️ **Issue:** May sound harsh - reduce 8-12kHz\n"
+    else:
+        message += "✅ **Frequency balance looks good**\n"
+    
+    cited_data = []
+    if lufs: cited_data.append(f"LUFS: {lufs:.1f}")
+    if dynamic_range: cited_data.append(f"DR: {dynamic_range:.1f}")
+    if peak_db: cited_data.append(f"Peak: {peak_db:.1f}")
+    
+    return {
+        'message': message,
+        'tone': 'mix_analytical',
+        'cited_data': ", ".join(cited_data)
+    }
+
+def respond_with_bass_data(data_summary, **metrics):
+    """ALWAYS cite exact bass and sub-bass energy levels"""
+    sub_bass = data_summary['sub_bass'] or 0
+    bass = data_summary['bass'] or 0
+    
+    message = "**BASS ANALYSIS - LOW-END BREAKDOWN**\n\n"
+    
+    message += f"🔊 **Sub-Bass (20-60Hz): {sub_bass:.3f}**\n"
+    message += f"🎵 **Bass (60-250Hz): {bass:.3f}**\n\n"
+    
+    # Sub-bass analysis
+    if sub_bass < 0.02:
+        sub_verdict = "WEAK - lacks foundation"
+        sub_advice = "Add sub-bass around 40-60Hz, use 808s or sub synths"
+    elif sub_bass > 0.15:
+        sub_verdict = "OVERPOWERING - may muddy the mix"
+        sub_advice = "Reduce sub content, use high-pass filtering on other elements"
+    else:
+        sub_verdict = "BALANCED - good foundation"
+        sub_advice = "Sub-bass level is appropriate for the genre"
+    
+    message += f"**Sub-Bass Assessment:** {sub_verdict}\n"
+    message += f"**Recommendation:** {sub_advice}\n\n"
+    
+    # Bass analysis
+    if bass < 0.05:
+        bass_verdict = "THIN - lacks warmth and body"
+        bass_advice = "Boost around 80-120Hz, add bass guitar or synth bass"
+    elif bass > 0.25:
+        bass_verdict = "HEAVY - may overpower other elements"
+        bass_advice = "Reduce bass content, use sidechain compression"
+    else:
+        bass_verdict = "SOLID - good presence"
+        bass_advice = "Bass level supports the track well"
+    
+    message += f"**Bass Assessment:** {bass_verdict}\n"
+    message += f"**Recommendation:** {bass_advice}\n\n"
+    
+    # Combined low-end assessment
+    total_low_end = sub_bass + bass
+    if total_low_end > 0.3:
+        message += "⚠️ **Overall:** Low-end is dominating - may cause muddiness on small speakers\n"
+    elif total_low_end < 0.08:
+        message += "⚠️ **Overall:** Track may sound thin and weak - needs more low-end presence\n"
+    else:
+        message += "✅ **Overall:** Low-end balance is good for modern production\n"
+    
+    return {
+        'message': message,
+        'tone': 'bass_analytical',
+        'cited_data': f"sub_bass: {sub_bass:.3f}, bass: {bass:.3f}"
+    }
+
+def respond_with_stereo_data(data_summary, **metrics):
+    """ALWAYS cite stereo correlation and width measurements"""
+    stereo_correlation = data_summary['stereo_correlation']
+    stereo_width = data_summary['stereo_width']
+    
+    if stereo_correlation is None and stereo_width is None:
+        return {
+            'message': "🧙‍♂️ *adjusts stereo lens* The stereo measurements remain veiled in the analysis mists. This suggests mono content or analysis limitations.",
+            'tone': 'data_missing'
+        }
+    
+    message = "**STEREO IMAGING ANALYSIS**\n\n"
+    
+    # Stereo Correlation Analysis
+    if stereo_correlation is not None:
+        if stereo_correlation > 0.8:
+            correlation_verdict = "NARROW - sounds mono-like"
+            correlation_advice = "Add stereo width with reverb, delay, or stereo imaging plugins"
+        elif stereo_correlation < 0.3:
+            correlation_verdict = "VERY WIDE - may collapse in mono"
+            correlation_advice = "Check mono compatibility, consider narrowing some elements"
+        else:
+            correlation_verdict = "BALANCED - good stereo spread"
+            correlation_advice = "Stereo field is well-balanced for most playback systems"
+        
+        message += f"🎧 **Stereo Correlation: {stereo_correlation:.2f}**\n"
+        message += f"Assessment: {correlation_verdict}\n"
+        message += f"Recommendation: {correlation_advice}\n\n"
+    
+    # Stereo Width Analysis
+    if stereo_width is not None:
+        if stereo_width < 0.3:
+            width_verdict = "NARROW - limited spatial dimension"
+            width_advice = "Widen with stereo reverbs, ping-pong delays, or M/S processing"
+        elif stereo_width > 0.8:
+            width_verdict = "VERY WIDE - spacious but check compatibility"
+            width_advice = "Ensure key elements (vocals, bass, kick) remain centered"
+        else:
+            width_verdict = "GOOD WIDTH - appropriate stereo field"
+            width_advice = "Stereo width enhances the listening experience appropriately"
+        
+        message += f"↔️ **Stereo Width: {stereo_width:.2f}**\n"
+        message += f"Assessment: {width_verdict}\n"
+        message += f"Recommendation: {width_advice}\n\n"
+    
+    # Production tips based on measurements
+    message += "**Stereo Production Tips:**\n"
+    if stereo_correlation and stereo_correlation > 0.7:
+        message += "• Pan instruments across the stereo field\n"
+        message += "• Use stereo reverbs and delays\n"
+        message += "• Consider haas effect for width\n"
+    else:
+        message += "• Keep important elements (vocals, bass, kick) centered\n"
+        message += "• Use mono reverb sends to maintain focus\n"
+        message += "• Check mix in mono to ensure translation\n"
+    
+    cited_data = []
+    if stereo_correlation: cited_data.append(f"correlation: {stereo_correlation:.2f}")
+    if stereo_width: cited_data.append(f"width: {stereo_width:.2f}")
+    
+    return {
+        'message': message,
+        'tone': 'stereo_analytical',
+        'cited_data': ", ".join(cited_data)
+    }
+
+def respond_with_comprehensive_data(data_summary, **metrics):
+    """COMPREHENSIVE: All metrics with specific numbers"""
+    message = "**COMPLETE TRACK ANALYSIS - ALL METRICS REVEALED**\n\n"
+    
+    # Basic Info
+    if data_summary['tempo'] or data_summary['key'] or data_summary['duration']:
+        message += "**🎵 Core Characteristics:**\n"
+        if data_summary['tempo']: message += f"• Tempo: {data_summary['tempo']:.1f} BPM\n"
+        if data_summary['key']: message += f"• Key: {data_summary['key']}\n"
+        if data_summary['duration']: message += f"• Duration: {data_summary['duration']:.1f}s\n"
+        message += "\n"
+    
+    # Loudness & Dynamics
+    if data_summary['lufs'] or data_summary['dynamic_range'] or data_summary['peak_db']:
+        message += "**🔊 Loudness & Dynamics:**\n"
+        if data_summary['lufs']: 
+            streaming_status = "GOOD" if -16 <= data_summary['lufs'] <= -12 else "NEEDS FIX"
+            message += f"• LUFS: {data_summary['lufs']:.1f} dB ({streaming_status})\n"
+        if data_summary['dynamic_range']: 
+            dr_status = "EXCELLENT" if data_summary['dynamic_range'] > 15 else "COMPRESSED" if data_summary['dynamic_range'] < 8 else "GOOD"
+            message += f"• Dynamic Range: {data_summary['dynamic_range']:.1f} dB ({dr_status})\n"
+        if data_summary['peak_db']: message += f"• Peak Level: {data_summary['peak_db']:.1f} dB\n"
+        message += "\n"
+    
+    # Stereo Field
+    if data_summary['stereo_correlation'] or data_summary['stereo_width']:
+        message += "**🎧 Stereo Field:**\n"
+        if data_summary['stereo_correlation']: 
+            stereo_status = "WIDE" if data_summary['stereo_correlation'] < 0.5 else "NARROW"
+            message += f"• Stereo Correlation: {data_summary['stereo_correlation']:.2f} ({stereo_status})\n"
+        if data_summary['stereo_width']: message += f"• Stereo Width: {data_summary['stereo_width']:.2f}\n"
+        message += "\n"
+    
+    # Frequency Breakdown
+    message += "**🎛️ 7-Band Frequency Analysis:**\n"
+    if data_summary['sub_bass']: message += f"• Sub-Bass (20-60Hz): {data_summary['sub_bass']:.3f}\n"
+    if data_summary['bass']: message += f"• Bass (60-250Hz): {data_summary['bass']:.3f}\n"
+    if data_summary['low_mid']: message += f"• Low-Mid (250Hz-1kHz): {data_summary['low_mid']:.3f}\n"
+    if data_summary['mid']: message += f"• Mid (1-4kHz): {data_summary['mid']:.3f}\n"
+    if data_summary['high_mid']: message += f"• High-Mid (4-8kHz): {data_summary['high_mid']:.3f}\n"
+    if data_summary['presence']: message += f"• Presence (8-16kHz): {data_summary['presence']:.3f}\n"
+    if data_summary['brilliance']: message += f"• Brilliance (16kHz+): {data_summary['brilliance']:.3f}\n"
+    message += "\n"
+    
+    # Musical Content
+    if data_summary['harmonic_ratio'] or data_summary['percussive_ratio']:
+        message += "**🎼 Musical Content:**\n"
+        if data_summary['harmonic_ratio']: message += f"• Harmonic Content: {data_summary['harmonic_ratio']:.2f} ({data_summary['harmonic_ratio']*100:.0f}%)\n"
+        if data_summary['percussive_ratio']: message += f"• Percussive Content: {data_summary['percussive_ratio']:.2f} ({data_summary['percussive_ratio']*100:.0f}%)\n"
+        message += "\n"
+    
+    # Issues Detection
+    issues = []
+    if data_summary['lufs'] and data_summary['lufs'] > -12:
+        issues.append("Track too loud for streaming")
+    if data_summary['dynamic_range'] and data_summary['dynamic_range'] < 8:
+        issues.append("Over-compressed")
+    if data_summary['bass'] and data_summary['bass'] < 0.05:
+        issues.append("Lacks low-end presence")
+    if data_summary['mid'] and data_summary['mid'] < 0.05:
+        issues.append("Vocals may lack clarity")
+    
+    if issues:
+        message += "⚠️ **Issues Detected:**\n"
+        for issue in issues:
+            message += f"• {issue}\n"
+    else:
+        message += "✅ **Overall Assessment: GOOD BALANCE**\n"
+    
+    return {
+        'message': message,
+        'tone': 'comprehensive_analytical',
+        'cited_data': "all_metrics_analyzed"
+    }
+
+def respond_with_dynamics_data(data_summary, **metrics):
+    """ALWAYS cite dynamic range and crest factor"""
+    dynamic_range = data_summary['dynamic_range']
+    crest_factor = data_summary['crest_factor']
+    
+    message = "**DYNAMICS ANALYSIS**\n\n"
+    
+    if dynamic_range is not None:
+        if dynamic_range < 6:
+            verdict = "HEAVILY COMPRESSED - lacks punch and life"
+            advice = "Reduce compression ratio, try parallel compression"
+        elif dynamic_range < 10:
+            verdict = "COMPRESSED - typical modern production"
+            advice = "Consider slight compression reduction for more natural feel"
+        elif dynamic_range > 15:
+            verdict = "EXCELLENT DYNAMICS - very musical and natural"
+            advice = "Maintain this dynamic range - it's perfect"
+        else:
+            verdict = "GOOD DYNAMICS - well balanced"
+            advice = "Solid dynamic range for professional production"
+        
+        message += f"📊 **Dynamic Range: {dynamic_range:.1f} dB**\n"
+        message += f"Assessment: {verdict}\n"
+        message += f"Recommendation: {advice}\n\n"
+    
+    if crest_factor is not None:
+        if crest_factor < 3:
+            crest_verdict = "VERY COMPRESSED - limited peaks"
+        elif crest_factor > 10:
+            crest_verdict = "VERY DYNAMIC - natural peaks"
+        else:
+            crest_verdict = "BALANCED - controlled peaks"
+        
+        message += f"⚡ **Crest Factor: {crest_factor:.1f}**\n"
+        message += f"Assessment: {crest_verdict}\n"
+    
+    return {
+        'message': message,
+        'tone': 'dynamics_analytical',
+        'cited_data': f"dynamic_range: {dynamic_range}, crest_factor: {crest_factor}"
+    }
+
+def respond_with_frequency_data(data_summary, **metrics):
+    """ALWAYS cite all 7 frequency bands"""
+    message = "**7-BAND FREQUENCY ANALYSIS**\n\n"
+    
+    bands = [
+        ('Sub-Bass (20-60Hz)', data_summary['sub_bass']),
+        ('Bass (60-250Hz)', data_summary['bass']),
+        ('Low-Mid (250Hz-1kHz)', data_summary['low_mid']),
+        ('Mid (1-4kHz)', data_summary['mid']),
+        ('High-Mid (4-8kHz)', data_summary['high_mid']),
+        ('Presence (8-16kHz)', data_summary['presence']),
+        ('Brilliance (16kHz+)', data_summary['brilliance'])
+    ]
+    
+    for band_name, energy in bands:
+        if energy is not None:
+            message += f"• **{band_name}:** {energy:.3f}\n"
+    
+    message += "\n**Frequency Assessment:**\n"
+    
+    # Specific frequency analysis
+    if data_summary['sub_bass'] and data_summary['sub_bass'] > 0.15:
+        message += "⚠️ Sub-bass may muddy the mix on large systems\n"
+    if data_summary['bass'] and data_summary['bass'] < 0.05:
+        message += "⚠️ Track may sound thin - needs more bass presence\n"
+    if data_summary['mid'] and data_summary['mid'] < 0.05:
+        message += "⚠️ Vocals/leads may lack clarity - boost 1-4kHz\n"
+    if data_summary['presence'] and data_summary['presence'] > 0.3:
+        message += "⚠️ May sound harsh - reduce 8-12kHz harshness\n"
+    if data_summary['brilliance'] and data_summary['brilliance'] > 0.2:
+        message += "⚠️ Very bright - may cause ear fatigue\n"
+    
+    return {
+        'message': message,
+        'tone': 'frequency_analytical',
+        'cited_data': "all_frequency_bands"
+    }
+
+def respond_with_problems_data(data_summary, **metrics):
+    """Identify specific issues with exact numbers"""
+    message = "**TRACK PROBLEMS ANALYSIS**\n\n"
+    
+    problems = []
+    solutions = []
+    
+    # Check each metric for problems
+    if data_summary['lufs'] and data_summary['lufs'] > -12:
+        problems.append(f"❌ Too loud: {data_summary['lufs']:.1f} LUFS (should be -14 LUFS)")
+        solutions.append(f"Reduce loudness by {data_summary['lufs'] - (-14):.1f} dB")
+    
+    if data_summary['dynamic_range'] and data_summary['dynamic_range'] < 8:
+        problems.append(f"❌ Over-compressed: {data_summary['dynamic_range']:.1f} dB range (needs 8+ dB)")
+        solutions.append("Reduce compression ratio or use parallel compression")
+    
+    if data_summary['bass'] and data_summary['bass'] < 0.05:
+        problems.append(f"❌ Weak bass: {data_summary['bass']:.3f} energy (needs 0.05+)")
+        solutions.append("Add sub-bass or boost 80-120Hz")
+    
+    if data_summary['mid'] and data_summary['mid'] < 0.05:
+        problems.append(f"❌ Unclear vocals: {data_summary['mid']:.3f} mid energy (needs 0.05+)")
+        solutions.append("Boost 1-4kHz for vocal clarity")
+    
+    if data_summary['stereo_correlation'] and data_summary['stereo_correlation'] > 0.8:
+        problems.append(f"❌ Too narrow: {data_summary['stereo_correlation']:.2f} correlation (needs <0.8)")
+        solutions.append("Add stereo width with reverb or stereo imaging")
+    
+    if problems:
+        message += "**🔍 Issues Found:**\n"
+        for problem in problems:
+            message += f"{problem}\n"
+        
+        message += "\n**💡 Solutions:**\n"
+        for solution in solutions:
+            message += f"• {solution}\n"
+    else:
+        message += "✅ **No major issues detected!**\n"
+        message += "Your track appears to be well-balanced overall."
+    
+    return {
+        'message': message,
+        'tone': 'problems_analytical',
+        'cited_data': f"analyzed_{len(problems)}_issues"
+    }
+
+def respond_with_genre_data(data_summary, **metrics):
+    """Genre classification based on actual metrics"""
+    tempo = data_summary['tempo']
+    harmonic_ratio = data_summary['harmonic_ratio']
+    percussive_ratio = data_summary['percussive_ratio']
+    bass = data_summary['bass']
+    
+    message = "**GENRE ANALYSIS - DATA-DRIVEN CLASSIFICATION**\n\n"
+    
+    if tempo is None:
+        return {
+            'message': "🧙‍♂️ Genre spirits require tempo data to reveal themselves. The analysis shows no clear rhythmic pattern.",
+            'tone': 'data_missing'
+        }
+    
+    # Genre determination based on metrics
+    genre_scores = {}
+    
+    # Pop (moderate tempo, balanced content)
+    if 100 <= tempo <= 130:
+        genre_scores['Pop'] = 0.7
+    
+    # Hip-Hop (moderate tempo, heavy bass, percussive)
+    if 80 <= tempo <= 110 and bass and bass > 0.1:
+        genre_scores['Hip-Hop'] = 0.8
+    
+    # EDM/Dance (fast tempo, electronic characteristics)
+    if tempo > 120:
+        genre_scores['EDM/Dance'] = 0.6 + (tempo - 120) / 100
+    
+    # R&B (slower tempo, harmonic content)
+    if 70 <= tempo <= 100 and harmonic_ratio and harmonic_ratio > 0.5:
+        genre_scores['R&B'] = 0.7
+    
+    # Rock (moderate-fast tempo, balanced dynamics)
+    if 110 <= tempo <= 140:
+        genre_scores['Rock'] = 0.6
+    
+    # Ambient/Chill (slow tempo, atmospheric)
+    if tempo < 80:
+        genre_scores['Ambient/Chill'] = 0.8
+    
+    # Determine most likely genre
+    if genre_scores:
+        top_genre = max(genre_scores, key=genre_scores.get)
+        confidence = genre_scores[top_genre]
+        
+        message += f"**Most Likely Genre: {top_genre}**\n"
+        message += f"Confidence: {confidence*100:.0f}%\n\n"
+        
+        message += "**Supporting Evidence:**\n"
+        message += f"• Tempo: {tempo:.1f} BPM\n"
+        if harmonic_ratio: message += f"• Harmonic Content: {harmonic_ratio:.2f}\n"
+        if percussive_ratio: message += f"• Percussive Content: {percussive_ratio:.2f}\n"
+        if bass: message += f"• Bass Energy: {bass:.3f}\n"
+    else:
+        message += "**Genre: EXPERIMENTAL/UNIQUE**\n"
+        message += f"Your track at {tempo:.1f} BPM doesn't fit typical genre patterns - that's creative!"
+    
+    return {
+        'message': message,
+        'tone': 'genre_analytical',
+        'cited_data': f"tempo: {tempo}, genre_analysis_complete"
+    }
 
 def analyze_track_problems(analysis_data):
     """🧙‍♂️ Analyze what's wrong with the track"""
@@ -835,32 +1579,118 @@ def analyze_genre(analysis_data):
     }
 
 def analyze_mix(analysis_data):
-    """🧙‍♂️ Mix analysis and advice"""
+    """Detailed mix analysis with actual numbers"""
     lufs = analysis_data.get('loudness', {}).get('lufs')
+    peak_db = analysis_data.get('amplitude_dynamics', {}).get('peak_db')
+    rms_db = analysis_data.get('amplitude_dynamics', {}).get('rms_db')
     dynamic_range = analysis_data.get('amplitude_dynamics', {}).get('dynamic_range_db')
+    stereo_correlation = analysis_data.get('loudness', {}).get('stereo_correlation')
+    stereo_width = analysis_data.get('loudness', {}).get('stereo_width')
     frequency_bands = analysis_data.get('frequency_bands', {})
     
-    mix_advice = []
+    message = "**MIX ANALYSIS REPORT**\n\n"
     
-    if lufs and lufs > -14:
-        mix_advice.append("🎚️ Your mix is TOO HOT! Target -14 LUFS for streaming. Use a limiter, young one!")
+    # Loudness Analysis
+    message += "**Loudness Levels:**\n"
+    if lufs is not None:
+        if lufs > -12:
+            assessment = "TOO LOUD - will be turned down by streaming"
+        elif lufs < -18:
+            assessment = "TOO QUIET - listeners will skip"
+        else:
+            assessment = "GOOD for streaming platforms"
+        message += f"• LUFS: {lufs:.1f} dB ({assessment})\n"
     
-    if dynamic_range and dynamic_range < 8:
-        mix_advice.append("📊 Your mix is CRUSHED! Aim for 8-12 dB of dynamic range for breathing room.")
+    if peak_db is not None:
+        message += f"• Peak Level: {peak_db:.1f} dB\n"
+    if rms_db is not None:
+        message += f"• RMS Level: {rms_db:.1f} dB\n"
     
+    if dynamic_range is not None:
+        if dynamic_range < 6:
+            dr_assessment = "HEAVILY COMPRESSED - lacks dynamics"
+        elif dynamic_range < 10:
+            dr_assessment = "COMPRESSED - typical modern production"
+        elif dynamic_range > 15:
+            dr_assessment = "EXCELLENT dynamics - very musical"
+        else:
+            dr_assessment = "GOOD dynamics"
+        message += f"• Dynamic Range: {dynamic_range:.1f} dB ({dr_assessment})\n"
+    
+    # Stereo Field
+    message += "\n**Stereo Field:**\n"
+    if stereo_correlation is not None:
+        if stereo_correlation > 0.8:
+            stereo_assessment = "NARROW - needs width"
+        elif stereo_correlation < 0.3:
+            stereo_assessment = "VERY WIDE - check mono compatibility"
+        else:
+            stereo_assessment = "BALANCED width"
+        message += f"• Stereo Correlation: {stereo_correlation:.2f} ({stereo_assessment})\n"
+    
+    if stereo_width is not None:
+        message += f"• Stereo Width: {stereo_width:.2f}\n"
+    
+    # Frequency Balance
+    message += "\n**Frequency Balance:**\n"
+    sub_bass = frequency_bands.get('sub_bass', 0)
     bass = frequency_bands.get('bass', 0)
+    low_mid = frequency_bands.get('low_mid', 0)
     mid = frequency_bands.get('mid', 0)
-    high = frequency_bands.get('presence', 0) + frequency_bands.get('brilliance', 0)
+    high_mid = frequency_bands.get('high_mid', 0)
+    presence = frequency_bands.get('presence', 0)
+    brilliance = frequency_bands.get('brilliance', 0)
+    
+    message += f"• Sub-Bass: {sub_bass:.3f}\n"
+    message += f"• Bass: {bass:.3f}\n"
+    message += f"• Low-Mid: {low_mid:.3f}\n"
+    message += f"• Mid: {mid:.3f}\n"
+    message += f"• High-Mid: {high_mid:.3f}\n"
+    message += f"• Presence: {presence:.3f}\n"
+    message += f"• Brilliance: {brilliance:.3f}\n"
+    
+    # Mix Issues & Recommendations
+    issues = []
+    recommendations = []
+    
+    if lufs is not None and lufs > -12:
+        issues.append("Track is too loud for streaming")
+        recommendations.append("Use a limiter to bring LUFS to -14 dB")
+    
+    if dynamic_range is not None and dynamic_range < 8:
+        issues.append("Track is over-compressed")
+        recommendations.append("Reduce compression or use parallel compression")
     
     if bass > mid * 2:
-        mix_advice.append("🔊 Your bass is DOMINATING! Balance it with your mids around 1-4 kHz.")
-    elif mid > bass * 2:
-        mix_advice.append("🎵 Your mids are THIN! Add some warmth in the 200-800 Hz range.")
+        issues.append("Bass is overpowering")
+        recommendations.append("Reduce bass around 80-200Hz or boost mids around 1-3kHz")
+    elif bass < 0.05:
+        issues.append("Lacks low-end presence")
+        recommendations.append("Add sub-bass around 40-60Hz or boost bass around 100Hz")
+    
+    if mid < 0.05:
+        issues.append("Vocals/instruments will lack clarity")
+        recommendations.append("Boost midrange around 1-4kHz for vocal presence")
+    
+    if brilliance > 0.3:
+        issues.append("May sound harsh or fatiguing")
+        recommendations.append("Reduce harshness around 8-12kHz")
+    
+    if issues:
+        message += "\n**Issues Found:**\n"
+        for issue in issues:
+            message += f"• {issue}\n"
+        
+        message += "\n**Recommendations:**\n"
+        for rec in recommendations:
+            message += f"• {rec}\n"
+    else:
+        message += "\n✅ **Mix Balance: GOOD**\n"
     
     return {
-        'message': "🧙‍♂️ *casts mixing spell* Your mix analysis reveals:\n\n" + "\n\n".join(mix_advice) + "\n\n*adjusts spectral glasses* These adjustments will bring balance to your track!",
+        'message': message,
         'tone': 'technical',
-        'mix_issues': len(mix_advice)
+        'mix_issues': len(issues)
     }
 
 def analyze_low_end(analysis_data):
@@ -907,6 +1737,127 @@ def provide_pop_reference_advice(analysis_data):
         'message': "🧙‍♂️ *summons pop magic* To channel the spirits of Billie and Tate:\n\n" + "\n\n".join(advice) + "\n\n*sparkles shimmer* Now create that radio-ready magic! ✨",
         'tone': 'pop_magical',
         'pop_potential': 'high'
+    }
+
+def provide_full_analysis(analysis_data):
+    """Comprehensive analysis of the entire track"""
+    tempo = analysis_data.get('rhythm', {}).get('tempo_bpm')
+    key = analysis_data.get('harmonic', {}).get('key')
+    lufs = analysis_data.get('loudness', {}).get('lufs')
+    duration = analysis_data.get('basic_info', {}).get('duration_sec')
+    sample_rate = analysis_data.get('basic_info', {}).get('sample_rate')
+    file_size_mb = analysis_data.get('basic_info', {}).get('file_size_mb')
+    
+    # Dynamics
+    peak_db = analysis_data.get('amplitude_dynamics', {}).get('peak_db')
+    rms_db = analysis_data.get('amplitude_dynamics', {}).get('rms_db')
+    dynamic_range_db = analysis_data.get('amplitude_dynamics', {}).get('dynamic_range_db')
+    crest_factor = analysis_data.get('amplitude_dynamics', {}).get('crest_factor')
+    
+    # Frequency bands
+    freq_bands = analysis_data.get('frequency_bands', {})
+    sub_bass = freq_bands.get('sub_bass', 0)
+    bass = freq_bands.get('bass', 0)
+    low_mid = freq_bands.get('low_mid', 0)
+    mid = freq_bands.get('mid', 0)
+    high_mid = freq_bands.get('high_mid', 0)
+    presence = freq_bands.get('presence', 0)
+    brilliance = freq_bands.get('brilliance', 0)
+    
+    # Stereo and loudness
+    stereo_correlation = analysis_data.get('loudness', {}).get('stereo_correlation')
+    stereo_width = analysis_data.get('loudness', {}).get('stereo_width')
+    
+    # Harmonic content
+    harmonic_ratio = analysis_data.get('harmonic', {}).get('harmonic_ratio')
+    percussive_ratio = analysis_data.get('harmonic', {}).get('percussive_ratio')
+    
+    # Rhythm details
+    beat_count = analysis_data.get('rhythm', {}).get('beat_count')
+    onset_count = analysis_data.get('rhythm', {}).get('onset_count')
+    onset_rate = analysis_data.get('rhythm', {}).get('onset_rate_per_sec')
+    
+    message = "**COMPREHENSIVE TRACK ANALYSIS**\n\n"
+    
+    # Basic Info
+    message += "**Track Overview:**\n"
+    if tempo: message += f"• Tempo: {tempo:.1f} BPM\n"
+    if key: message += f"• Key: {key}\n"
+    if duration: message += f"• Duration: {duration:.1f} seconds\n"
+    if sample_rate: message += f"• Sample Rate: {sample_rate:,} Hz\n"
+    if file_size_mb: message += f"• File Size: {file_size_mb:.1f} MB\n"
+    
+    # Loudness & Dynamics
+    message += "\n**Loudness & Dynamics:**\n"
+    if lufs is not None: 
+        loudness_assessment = "PERFECT" if -16 <= lufs <= -12 else "TOO LOUD" if lufs > -12 else "TOO QUIET"
+        message += f"• LUFS: {lufs:.1f} dB ({loudness_assessment} for streaming)\n"
+    if peak_db is not None: message += f"• Peak Level: {peak_db:.1f} dB\n"
+    if rms_db is not None: message += f"• RMS Level: {rms_db:.1f} dB\n"
+    if dynamic_range_db is not None:
+        dynamics_assessment = "EXCELLENT" if dynamic_range_db > 15 else "GOOD" if dynamic_range_db > 10 else "COMPRESSED"
+        message += f"• Dynamic Range: {dynamic_range_db:.1f} dB ({dynamics_assessment})\n"
+    if crest_factor is not None: message += f"• Crest Factor: {crest_factor:.1f}\n"
+    
+    # Stereo Field
+    message += "\n**Stereo Imaging:**\n"
+    if stereo_correlation is not None:
+        stereo_assessment = "WIDE" if stereo_correlation < 0.3 else "BALANCED" if stereo_correlation < 0.7 else "NARROW"
+        message += f"• Stereo Correlation: {stereo_correlation:.2f} ({stereo_assessment})\n"
+    if stereo_width is not None:
+        width_assessment = "VERY WIDE" if stereo_width > 0.8 else "WIDE" if stereo_width > 0.5 else "NARROW"
+        message += f"• Stereo Width: {stereo_width:.2f} ({width_assessment})\n"
+    
+    # Frequency Analysis
+    message += "\n**7-Band Frequency Analysis:**\n"
+    message += f"• Sub-Bass (20-60Hz): {sub_bass:.3f}\n"
+    message += f"• Bass (60-250Hz): {bass:.3f}\n"
+    message += f"• Low-Mid (250Hz-1kHz): {low_mid:.3f}\n"
+    message += f"• Mid (1-4kHz): {mid:.3f}\n"
+    message += f"• High-Mid (4-8kHz): {high_mid:.3f}\n"
+    message += f"• Presence (8-16kHz): {presence:.3f}\n"
+    message += f"• Brilliance (16kHz+): {brilliance:.3f}\n"
+    
+    # Content Analysis
+    message += "\n**Musical Content:**\n"
+    if harmonic_ratio is not None and percussive_ratio is not None:
+        content_type = "MELODIC" if harmonic_ratio > 0.6 else "RHYTHMIC" if percussive_ratio > 0.6 else "BALANCED"
+        message += f"• Harmonic Content: {harmonic_ratio:.2f}\n"
+        message += f"• Percussive Content: {percussive_ratio:.2f}\n"
+        message += f"• Content Type: {content_type}\n"
+    
+    # Rhythm Analysis
+    if beat_count or onset_count:
+        message += "\n**Rhythm Analysis:**\n"
+        if beat_count: message += f"• Beat Count: {beat_count}\n"
+        if onset_count: message += f"• Onset Events: {onset_count}\n"
+        if onset_rate: message += f"• Onset Rate: {onset_rate:.1f} per second\n"
+    
+    # Production Assessment
+    message += "\n**Production Assessment:**\n"
+    issues = []
+    if lufs is not None and lufs > -12:
+        issues.append("Track is too loud for streaming platforms")
+    if dynamic_range_db is not None and dynamic_range_db < 8:
+        issues.append("Track is over-compressed")
+    if bass < 0.1:
+        issues.append("Lacks low-end presence")
+    if mid < 0.1:
+        issues.append("Lacks vocal/instrument clarity")
+    if brilliance > 0.5:
+        issues.append("May be too bright/harsh")
+    
+    if issues:
+        message += "⚠️ **Issues Found:**\n"
+        for issue in issues:
+            message += f"• {issue}\n"
+    else:
+        message += "✅ **Overall Balance: GOOD**\n"
+    
+    return {
+        'message': message,
+        'tone': 'analytical',
+        'analysis_type': 'comprehensive'
     }
 
 def provide_general_advice(analysis_data):
