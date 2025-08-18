@@ -687,6 +687,14 @@ def analyze_and_respond_with_data(user_message, **metrics):
     elif any(word in user_lower for word in ['low end', 'low-end', 'lowend', 'sub', '808', 'kick', 'bass']):
         return respond_with_bass_data(data_summary, **metrics)
     
+    # VOCAL ANALYSIS
+    elif any(word in user_lower for word in ['vocal', 'vocals', 'voice', 'singing', 'singer', 'lyrics']):
+        return respond_with_vocal_analysis(data_summary, **metrics)
+    
+    # SUGGESTIONS/IMPROVEMENTS
+    elif any(word in user_lower for word in ['suggestions', 'improve', 'better', 'tips', 'advice', 'help']):
+        return respond_with_arrangement_tips(data_summary, **metrics)
+    
     # DEFAULT: TRACK OVERVIEW with key metrics
     else:
         return respond_with_overview_data(data_summary, **metrics)
@@ -1538,6 +1546,78 @@ def respond_with_arrangement_tips(data_summary, **metrics):
         'message': message,
         'tone': 'arrangement_analytical',
         'cited_data': f"tempo: {tempo}, duration: {duration}, harmonic: {harmonic_ratio}, percussive: {percussive_ratio}"
+    }
+
+def respond_with_vocal_analysis(data_summary, **metrics):
+    """Analyze vocal characteristics and provide vocal-specific advice"""
+    mid = data_summary['mid'] or 0
+    presence = data_summary['presence'] or 0
+    harmonic_ratio = data_summary['harmonic_ratio']
+    percussive_ratio = data_summary['percussive_ratio']
+    lufs = data_summary['lufs']
+    
+    message = "**VOCAL ANALYSIS & MIXING ADVICE**\n\n"
+    
+    # Vocal frequency analysis
+    message += "**🎤 Vocal Frequency Content:**\n"
+    message += f"• Mid-Range (1-4kHz): {mid:.3f}\n"
+    message += f"• Presence (8-16kHz): {presence:.3f}\n\n"
+    
+    # Vocal clarity assessment
+    if mid < 0.05:
+        message += "⚠️ **Vocal Clarity Issues:**\n"
+        message += "• **Problem:** Vocals lack presence and clarity\n"
+        message += "• **Solution:** Boost 1-4kHz range by 3-6 dB\n"
+        message += "• **Technique:** Use a high-shelf EQ around 2.5kHz\n\n"
+    else:
+        message += "✅ **Vocal Clarity:** Good mid-range presence\n\n"
+    
+    if presence < 0.05:
+        message += "⚠️ **Vocal Air/Brightness Issues:**\n"
+        message += "• **Problem:** Vocals lack air and brightness\n"
+        message += "• **Solution:** Boost 8-12kHz range by 2-4 dB\n"
+        message += "• **Technique:** Use a high-shelf EQ around 10kHz\n\n"
+    else:
+        message += "✅ **Vocal Air:** Good brightness and presence\n\n"
+    
+    # Content-based vocal advice
+    if harmonic_ratio and percussive_ratio:
+        message += "**🎼 Musical Context Analysis:**\n"
+        if harmonic_ratio > 0.6:
+            message += "• **Melodic Focus:** Perfect for vocal-driven tracks\n"
+            message += "• **Vocal Style:** Great for singing, melodic rap, R&B\n"
+            message += "• **Production:** Emphasize vocal harmonies and ad-libs\n"
+        elif percussive_ratio > 0.6:
+            message += "• **Rhythmic Focus:** Better for rhythmic rap and spoken word\n"
+            message += "• **Vocal Style:** Focus on rhythm and flow over melody\n"
+            message += "• **Production:** Emphasize vocal rhythm and timing\n"
+        else:
+            message += "• **Balanced Content:** Versatile for multiple vocal styles\n"
+            message += "• **Vocal Style:** Works for both melodic and rhythmic vocals\n"
+    
+    # Loudness advice for vocals
+    if lufs:
+        message += f"\n**🔊 Vocal Loudness Context:**\n"
+        if lufs < -16:
+            message += "• **Track is quiet:** Vocals should be prominent in the mix\n"
+            message += "• **Target:** Vocals 3-6 dB above instrumental elements\n"
+        elif lufs > -12:
+            message += "• **Track is loud:** Be careful not to over-compress vocals\n"
+            message += "• **Target:** Vocals 1-3 dB above instrumental elements\n"
+        else:
+            message += "• **Good track level:** Standard vocal mixing applies\n"
+            message += "• **Target:** Vocals 2-4 dB above instrumental elements\n"
+    
+    message += "\n**💡 Pro Vocal Tips:**\n"
+    message += "• **Compression:** Use 2:1 ratio, 3-6 dB reduction\n"
+    message += "• **EQ:** Cut 200-400Hz for clarity, boost 2.5kHz for presence\n"
+    message += "• **Reverb:** Short decay (0.5-1.5s) for modern sound\n"
+    message += "• **Delay:** 1/8 or 1/4 note delay for depth\n"
+    
+    return {
+        'message': message,
+        'tone': 'vocal_analytical',
+        'cited_data': f"mid: {mid:.3f}, presence: {presence:.3f}, harmonic: {harmonic_ratio}, percussive: {percussive_ratio}"
     }
 
 def analyze_track_problems(analysis_data):
