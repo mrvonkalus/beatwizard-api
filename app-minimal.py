@@ -671,6 +671,22 @@ def analyze_and_respond_with_data(user_message, **metrics):
     elif any(word in user_lower for word in ['everything', 'all', 'full', 'complete', 'detailed', 'track']):
         return respond_with_comprehensive_data(data_summary, **metrics)
     
+    # ARTIST SUGGESTIONS - Based on tempo, key, and style
+    elif any(word in user_lower for word in ['artist', 'artists', 'who', 'rapper', 'singer', 'producer', 'like', 'similar']):
+        return respond_with_artist_suggestions(data_summary, **metrics)
+    
+    # SOUND SELECTION ANALYSIS
+    elif any(word in user_lower for word in ['sound', 'selection', 'sounds', 'samples', 'instruments', 'drums']):
+        return respond_with_sound_selection_analysis(data_summary, **metrics)
+    
+    # ARRANGEMENT TIPS
+    elif any(word in user_lower for word in ['arrangement', 'structure', 'build', 'drop', 'verse', 'chorus', 'bridge']):
+        return respond_with_arrangement_tips(data_summary, **metrics)
+    
+    # LOW-END SPECIFIC ANALYSIS
+    elif any(word in user_lower for word in ['low end', 'low-end', 'lowend', 'sub', '808', 'kick', 'bass']):
+        return respond_with_bass_data(data_summary, **metrics)
+    
     # DEFAULT: TRACK OVERVIEW with key metrics
     else:
         return respond_with_overview_data(data_summary, **metrics)
@@ -1338,6 +1354,190 @@ def respond_with_genre_data(data_summary, **metrics):
         'message': message,
         'tone': 'genre_analytical',
         'cited_data': f"tempo: {tempo}, genre_analysis_complete"
+    }
+
+def respond_with_artist_suggestions(data_summary, **metrics):
+    """Suggest artists based on tempo, key, and musical characteristics"""
+    tempo = data_summary['tempo']
+    key = data_summary['key']
+    harmonic_ratio = data_summary['harmonic_ratio']
+    percussive_ratio = data_summary['percussive_ratio']
+    
+    if tempo is None:
+        return {
+            'message': "🧙‍♂️ *adjusts artist lens* Without tempo data, I cannot divine which artists would resonate with your track's energy.",
+            'tone': 'data_missing'
+        }
+    
+    message = "**ARTIST SUGGESTIONS - BASED ON YOUR TRACK**\n\n"
+    
+    # Artist suggestions based on tempo and characteristics
+    if tempo < 85:
+        message += "**🎵 SLOW TEMPO ARTISTS (70-85 BPM):**\n"
+        message += "• **R&B/Soul:** SZA, Frank Ocean, The Weeknd\n"
+        message += "• **Alternative:** Billie Eilish, Lana Del Rey\n"
+        message += "• **Hip-Hop:** J. Cole, Kendrick Lamar (slow tracks)\n\n"
+    
+    elif tempo < 100:
+        message += "**🎵 MODERATE TEMPO ARTISTS (85-100 BPM):**\n"
+        message += "• **Pop/R&B:** Doja Cat, Ariana Grande, Dua Lipa\n"
+        message += "• **Hip-Hop:** Drake, Post Malone, Travis Scott\n"
+        message += "• **Alternative:** Tate McRae, Olivia Rodrigo\n\n"
+    
+    elif tempo < 120:
+        message += "**🎵 UPBEAT TEMPO ARTISTS (100-120 BPM):**\n"
+        message += "• **Pop:** Taylor Swift, Ed Sheeran, Harry Styles\n"
+        message += "• **Hip-Hop:** Eminem, JAY-Z, Kanye West\n"
+        message += "• **Electronic:** The Weeknd, Daft Punk\n\n"
+    
+    else:
+        message += "**🎵 HIGH ENERGY ARTISTS (120+ BPM):**\n"
+        message += "• **EDM:** Calvin Harris, David Guetta\n"
+        message += "• **Pop:** Lady Gaga, Katy Perry\n"
+        message += "• **Hip-Hop:** Migos, Cardi B (upbeat tracks)\n\n"
+    
+    # Key-specific suggestions
+    if key:
+        message += f"**🎼 KEY-SPECIFIC ARTISTS (Key: {key}):**\n"
+        if key in ['C', 'G', 'D', 'A', 'E']:
+            message += "• **Major Key Artists:** Ed Sheeran, Taylor Swift, Adele\n"
+        elif key in ['Am', 'Em', 'Bm', 'F#m', 'C#m']:
+            message += "• **Minor Key Artists:** The Weeknd, Billie Eilish, Lana Del Rey\n"
+    
+    # Content-based suggestions
+    if harmonic_ratio and percussive_ratio:
+        if harmonic_ratio > 0.6:
+            message += "\n**🎵 MELODIC FOCUS:** Perfect for vocalists and singer-songwriters\n"
+        elif percussive_ratio > 0.6:
+            message += "\n**🥁 RHYTHMIC FOCUS:** Great for rappers and MCs\n"
+    
+    message += f"\n**Based on your {tempo:.1f} BPM track in {key} - these artists would vibe with your energy!**"
+    
+    return {
+        'message': message,
+        'tone': 'artist_suggestions',
+        'cited_data': f"tempo: {tempo}, key: {key}, harmonic: {harmonic_ratio}, percussive: {percussive_ratio}"
+    }
+
+def respond_with_sound_selection_analysis(data_summary, **metrics):
+    """Analyze sound selection based on frequency content and characteristics"""
+    bass = data_summary['bass'] or 0
+    mid = data_summary['mid'] or 0
+    presence = data_summary['presence'] or 0
+    harmonic_ratio = data_summary['harmonic_ratio']
+    percussive_ratio = data_summary['percussive_ratio']
+    
+    message = "**SOUND SELECTION ANALYSIS**\n\n"
+    
+    # Frequency balance assessment
+    message += "**🎛️ Frequency Distribution:**\n"
+    message += f"• Bass Content: {bass:.3f}\n"
+    message += f"• Mid Content: {mid:.3f}\n"
+    message += f"• Presence Content: {presence:.3f}\n\n"
+    
+    # Sound selection assessment
+    if bass < 0.05:
+        message += "⚠️ **Bass Sounds:** Weak low-end presence\n"
+        message += "• Consider: 808s, sub-bass, bass guitar\n"
+        message += "• Add: Kick drums with more low-end weight\n\n"
+    else:
+        message += "✅ **Bass Sounds:** Good low-end foundation\n\n"
+    
+    if mid < 0.05:
+        message += "⚠️ **Mid Sounds:** Lacks vocal/instrument clarity\n"
+        message += "• Consider: Piano, guitar, synth leads\n"
+        message += "• Add: More melodic elements in 1-4kHz range\n\n"
+    else:
+        message += "✅ **Mid Sounds:** Good vocal/instrument presence\n\n"
+    
+    if presence < 0.05:
+        message += "⚠️ **High-End Sounds:** Lacks brightness and air\n"
+        message += "• Consider: Hi-hats, cymbals, bright synths\n"
+        message += "• Add: More high-frequency content\n\n"
+    else:
+        message += "✅ **High-End Sounds:** Good brightness and air\n\n"
+    
+    # Content-based recommendations
+    if harmonic_ratio and percussive_ratio:
+        message += "**🎼 Musical Content Analysis:**\n"
+        if harmonic_ratio > 0.6:
+            message += "• **Melodic Focus:** Great for vocal tracks\n"
+            message += "• **Recommended:** Piano, strings, pad sounds\n"
+        elif percussive_ratio > 0.6:
+            message += "• **Rhythmic Focus:** Perfect for rap/hip-hop\n"
+            message += "• **Recommended:** Hard-hitting drums, 808s, percussion\n"
+        else:
+            message += "• **Balanced Content:** Versatile for multiple genres\n"
+            message += "• **Recommended:** Mix of melodic and rhythmic elements\n"
+    
+    return {
+        'message': message,
+        'tone': 'sound_selection_analytical',
+        'cited_data': f"bass: {bass:.3f}, mid: {mid:.3f}, presence: {presence:.3f}"
+    }
+
+def respond_with_arrangement_tips(data_summary, **metrics):
+    """Provide arrangement and structure tips based on track characteristics"""
+    tempo = data_summary['tempo']
+    duration = data_summary['duration']
+    harmonic_ratio = data_summary['harmonic_ratio']
+    percussive_ratio = data_summary['percussive_ratio']
+    
+    message = "**ARRANGEMENT & STRUCTURE TIPS**\n\n"
+    
+    # Tempo-based arrangement advice
+    if tempo:
+        message += f"**🎵 Tempo-Based Structure ({tempo:.1f} BPM):**\n"
+        if tempo < 85:
+            message += "• **Slow Build:** Perfect for emotional, atmospheric tracks\n"
+            message += "• **Structure:** Intro → Verse → Chorus → Bridge → Outro\n"
+            message += "• **Energy Curve:** Gradual build, peak at chorus\n"
+        elif tempo < 100:
+            message += "• **Moderate Energy:** Great for pop and R&B\n"
+            message += "• **Structure:** Intro → Verse → Pre-Chorus → Chorus → Verse 2 → Chorus → Bridge → Final Chorus\n"
+            message += "• **Energy Curve:** Steady build, strong choruses\n"
+        elif tempo < 120:
+            message += "• **Upbeat Energy:** Perfect for dance and hip-hop\n"
+            message += "• **Structure:** Intro → Hook → Verse → Hook → Verse 2 → Hook → Bridge → Final Hook\n"
+            message += "• **Energy Curve:** High energy throughout, drops for verses\n"
+        else:
+            message += "• **High Energy:** Ideal for EDM and club tracks\n"
+            message += "• **Structure:** Intro → Build → Drop → Breakdown → Build → Drop → Outro\n"
+            message += "• **Energy Curve:** Dramatic builds and drops\n"
+    
+    # Duration-based tips
+    if duration:
+        message += f"\n**⏱️ Duration Optimization ({duration:.1f}s):**\n"
+        if duration < 60:
+            message += "• **Short Track:** Focus on hook and immediate impact\n"
+            message += "• **Structure:** Keep it simple - Intro → Hook → Verse → Hook\n"
+        elif duration < 180:
+            message += "• **Standard Length:** Perfect for radio and streaming\n"
+            message += "• **Structure:** Full arrangement with clear sections\n"
+        else:
+            message += "• **Extended Track:** Great for albums and deep listening\n"
+            message += "• **Structure:** Include instrumental breaks and extended sections\n"
+    
+    # Content-based arrangement tips
+    if harmonic_ratio and percussive_ratio:
+        message += f"\n**🎼 Content-Based Tips:**\n"
+        if harmonic_ratio > 0.6:
+            message += "• **Melodic Focus:** Emphasize chord progressions and melodies\n"
+            message += "• **Arrangement:** Build around vocal hooks and instrumental solos\n"
+        elif percussive_ratio > 0.6:
+            message += "• **Rhythmic Focus:** Emphasize drum patterns and grooves\n"
+            message += "• **Arrangement:** Build around beat drops and rhythmic breaks\n"
+    
+    message += "\n**💡 Pro Tips:**\n"
+    message += "• **Hook First:** Start with your strongest element\n"
+    message += "• **Energy Management:** Don't peak too early\n"
+    message += "• **Repetition:** Use familiar elements to build comfort\n"
+    message += "• **Contrast:** Create tension with different sections\n"
+    
+    return {
+        'message': message,
+        'tone': 'arrangement_analytical',
+        'cited_data': f"tempo: {tempo}, duration: {duration}, harmonic: {harmonic_ratio}, percussive: {percussive_ratio}"
     }
 
 def analyze_track_problems(analysis_data):
