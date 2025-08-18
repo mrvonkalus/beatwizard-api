@@ -438,8 +438,11 @@ def analyze_full():
             band_bins = np.where((mel_bins >= mel_low) & (mel_bins <= mel_high))[0]
             
             if len(band_bins) > 0:
+                # Calculate band energy and normalize
                 band_energy = np.mean(S[band_bins, :])
-                frequency_analysis[band_name] = float(band_energy)
+                # Normalize to a more readable scale (0-1000)
+                normalized_energy = band_energy * 1000
+                frequency_analysis[band_name] = float(normalized_energy)
             else:
                 frequency_analysis[band_name] = 0.0
         
