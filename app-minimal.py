@@ -694,6 +694,10 @@ def analyze_and_respond_with_data(user_message, **metrics):
     elif any(word in user_lower for word in ['vocal', 'vocals', 'voice', 'singing', 'singer', 'lyrics']):
         return respond_with_vocal_analysis(data_summary, **metrics)
     
+    # RHYTHM/DRUMS ANALYSIS
+    elif any(word in user_lower for word in ['rhythm', 'drums', 'drum', 'beat', 'percussion', 'groove']):
+        return respond_with_rhythm_analysis(data_summary, **metrics)
+    
     # SUGGESTIONS/IMPROVEMENTS
     elif any(word in user_lower for word in ['suggestions', 'improve', 'better', 'tips', 'advice', 'help']):
         return respond_with_arrangement_tips(data_summary, **metrics)
@@ -1621,6 +1625,97 @@ def respond_with_vocal_analysis(data_summary, **metrics):
         'message': message,
         'tone': 'vocal_analytical',
         'cited_data': f"mid: {mid:.3f}, presence: {presence:.3f}, harmonic: {harmonic_ratio}, percussive: {percussive_ratio}"
+    }
+
+def respond_with_rhythm_analysis(data_summary, **metrics):
+    """Analyze rhythm and drum characteristics"""
+    tempo = data_summary['tempo']
+    percussive_ratio = data_summary['percussive_ratio']
+    harmonic_ratio = data_summary['harmonic_ratio']
+    dynamic_range = data_summary['dynamic_range']
+    crest_factor = data_summary['crest_factor']
+    
+    message = "**RHYTHM & DRUM ANALYSIS**\n\n"
+    
+    # Tempo analysis
+    if tempo:
+        message += f"**🎵 Tempo: {tempo:.1f} BPM**\n"
+        if tempo < 85:
+            message += "• **Groove Type:** Laid-back, relaxed feel\n"
+            message += "• **Drum Style:** Sparse, atmospheric beats\n"
+        elif tempo < 100:
+            message += "• **Groove Type:** Moderate, groovy feel\n"
+            message += "• **Drum Style:** Balanced, musical beats\n"
+        elif tempo < 120:
+            message += "• **Groove Type:** Energetic, driving feel\n"
+            message += "• **Drum Style:** Punchy, rhythmic beats\n"
+        else:
+            message += "• **Groove Type:** High-energy, intense feel\n"
+            message += "• **Drum Style:** Fast, aggressive beats\n"
+        message += "\n"
+    
+    # Content analysis
+    if percussive_ratio and harmonic_ratio:
+        message += f"**🎼 Content Balance:**\n"
+        message += f"• Percussive Content: {percussive_ratio:.1%}\n"
+        message += f"• Harmonic Content: {harmonic_ratio:.1%}\n\n"
+        
+        if percussive_ratio > 0.6:
+            message += "**🥁 Drum-Heavy Track:**\n"
+            message += "• **Strength:** Strong rhythmic foundation\n"
+            message += "• **Focus:** Emphasize drum patterns and groove\n"
+            message += "• **Production:** Layer percussion, add drum fills\n"
+        elif harmonic_ratio > 0.6:
+            message += "**🎹 Melody-Heavy Track:**\n"
+            message += "• **Strength:** Rich harmonic content\n"
+            message += "• **Focus:** Drums should support melodies\n"
+            message += "• **Production:** Subtle, musical drum programming\n"
+        else:
+            message += "**⚖️ Balanced Track:**\n"
+            message += "• **Strength:** Good harmony-rhythm balance\n"
+            message += "• **Focus:** Drums and melody work together\n"
+            message += "• **Production:** Complementary arrangement\n"
+        message += "\n"
+    
+    # Dynamic analysis
+    if dynamic_range:
+        message += f"**📊 Dynamic Range: {dynamic_range:.1f} dB**\n"
+        if dynamic_range > 15:
+            message += "• **Assessment:** Excellent dynamics - very musical\n"
+            message += "• **Drum Advice:** Natural, expressive drum programming\n"
+        elif dynamic_range > 10:
+            message += "• **Assessment:** Good dynamics - balanced\n"
+            message += "• **Drum Advice:** Moderate compression, preserve groove\n"
+        else:
+            message += "• **Assessment:** Compressed dynamics - modern sound\n"
+            message += "• **Drum Advice:** Punchy, consistent drum levels\n"
+        message += "\n"
+    
+    if crest_factor:
+        message += f"**⚡ Crest Factor: {crest_factor:.1f}**\n"
+        if crest_factor > 8:
+            message += "• **Assessment:** Dynamic peaks - natural sound\n"
+            message += "• **Drum Advice:** Preserve drum transients\n"
+        elif crest_factor > 5:
+            message += "• **Assessment:** Controlled peaks - balanced\n"
+            message += "• **Drum Advice:** Moderate limiting on drums\n"
+        else:
+            message += "• **Assessment:** Limited peaks - modern sound\n"
+            message += "• **Drum Advice:** Heavy compression for punch\n"
+        message += "\n"
+    
+    # Production tips
+    message += "**💡 Drum Production Tips:**\n"
+    message += "• **Kick:** Layer with sub-bass for impact\n"
+    message += "• **Snare:** Add reverb for space, compression for punch\n"
+    message += "• **Hi-hats:** Use velocity variation for human feel\n"
+    message += "• **Groove:** Slight swing (55-65%) for natural rhythm\n"
+    message += "• **Mixing:** Side-chain kick to bass for clarity\n"
+    
+    return {
+        'message': message,
+        'tone': 'rhythm_analytical',
+        'cited_data': f"tempo: {tempo}, percussive: {percussive_ratio}, dynamic_range: {dynamic_range}, crest_factor: {crest_factor}"
     }
 
 def analyze_track_problems(analysis_data):
