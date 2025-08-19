@@ -1,5 +1,5 @@
-# Ultra-Minimal Flask Dependencies for Railway Deployment
-# Absolute minimum to get deployed first
+# BeatWizard Dependencies for Render.com Deployment
+# Complete audio analysis application
 
 # Core Web Framework
 flask>=2.3.0

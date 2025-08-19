@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BeatWizard Minimal Flask App for Railway Deployment
+BeatWizard Flask App - Render.com Deployment
 Simplified version without audio dependencies - deploys reliably first
 """
 
@@ -93,7 +93,7 @@ CORS(app,
      max_age=86400  # Cache preflight requests for 24 hours
 )
 
-# Trust Railway's proxy
+# Trust Render's proxy
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 # Supported audio file extensions (for when we add audio back)
@@ -117,7 +117,7 @@ def _now_iso() -> str:
 
 @app.route('/')
 def health_check():
-    """Health check endpoint for Railway"""
+    """Health check endpoint for Render"""
     return jsonify({
         'status': 'healthy',
         'service': 'BeatWizard Audio Analysis API',
@@ -215,7 +215,7 @@ def echo_test():
         'received_data': data,
         'message': 'POST endpoint working correctly!',
         'timestamp': time.time(),
-        'note': 'This confirms Railway deployment is handling requests properly'
+        'note': 'This confirms Render deployment is handling requests properly'
     })
 
 @app.route('/api/upload', methods=['POST'])
@@ -581,12 +581,102 @@ def beatwizard_chat():
     except Exception as e:
         return jsonify({'error': 'Chat error', 'detail': str(e)}), 500
 
+def classify_user_intent(user_message, analysis_data):
+    """
+    🧠 INTELLIGENT INTENT CLASSIFICATION ENGINE
+    Understands the meaning and context behind user questions
+    """
+    user_lower = user_message.lower().strip()
+    
+    # Multi-word semantic patterns (most specific first)
+    intent_patterns = {
+        'instrumentation_analysis': [
+            'what instruments', 'which instruments', 'what instrumentation', 'instruments do you hear',
+            'instruments in my track', 'what sounds do you hear', 'what do you hear',
+            'instrumentation do you hear', 'what\'s in my track', 'what\'s playing'
+        ],
+        'eq_analysis': [
+            'how is my eq', 'how\'s my eq', 'eq advice', 'frequency balance', 'frequency analysis',
+            'eq problems', 'eq issues', 'equalization', 'how are my frequencies'
+        ],
+        'compression_analysis': [
+            'how is my compression', 'how\'s my compression', 'compression advice', 'dynamics advice',
+            'is it compressed', 'compression problems', 'too compressed', 'dynamics analysis'
+        ],
+        'vocal_analysis': [
+            'vocal mix', 'vocal mixing', 'vocals mix', 'how are my vocals', 'vocal advice',
+            'vocals sound', 'vocal quality', 'vocal clarity', 'vocal presence'
+        ],
+        'spatial_analysis': [
+            'reverb advice', 'spatial mix', 'how\'s my reverb', 'stereo field', 'stereo width',
+            'stereo image', 'how wide', 'spatial analysis', 'room sound', 'depth'
+        ],
+        'improvement_suggestions': [
+            'make better', 'improve my track', 'how to improve', 'production tips', 'mixing tips',
+            'what\'s wrong', 'how to fix', 'problems with', 'issues with', 'make it better',
+            'improve this', 'fix my track', 'production advice', 'mixing advice'
+        ],
+        'artist_suggestions': [
+            'similar artists', 'artists like', 'who would use', 'what artists', 'sounds like',
+            'reminds me of', 'artists who make', 'similar to', 'comparable artists'
+        ],
+        'genre_analysis': [
+            'what genre', 'genre is this', 'style is this', 'type of music', 'genre analysis',
+            'what style', 'music style', 'genre classification'
+        ],
+        'rhythm_analysis': [
+            'drums and percussion', 'drum and percussion', 'how are my drums', 'drum advice',
+            'rhythm analysis', 'beat analysis', 'groove analysis', 'percussion analysis'
+        ],
+        'mix_overview': [
+            'how\'s my mix', 'how is my mix', 'mix analysis', 'overall mix', 'general mix',
+            'mix quality', 'mix advice', 'mixing analysis'
+        ]
+    }
+    
+    # Check for specific phrase patterns first
+    for intent, patterns in intent_patterns.items():
+        for pattern in patterns:
+            if pattern in user_lower:
+                return intent
+    
+    # Single word semantic classification with context
+    single_word_intents = {
+        'tempo_analysis': ['tempo', 'bpm', 'speed'],
+        'key_analysis': ['key', 'scale', 'chord', 'pitch'],
+        'bass_analysis': ['bass', 'low end', 'low-end', '808'],
+        'stereo_analysis': ['stereo', 'width', 'imaging', 'wide', 'narrow'],
+        'vocal_analysis': ['vocal', 'vocals', 'voice', 'singing', 'singer'],
+        'rhythm_analysis': ['rhythm', 'drums', 'drum', 'beat', 'percussion', 'groove'],
+        'eq_analysis': ['eq', 'equalization', 'equalizer'],
+        'compression_analysis': ['compression', 'compressor', 'compressed'],
+        'spatial_analysis': ['reverb', 'space', 'room', 'depth', 'ambience'],
+        'dynamics_analysis': ['dynamics', 'punch', 'impact'],
+        'frequency_analysis': ['frequency', 'frequencies', 'bright', 'dark', 'muddy'],
+        'problems_analysis': ['problem', 'issue', 'wrong', 'bad', 'fix'],
+        'arrangement_analysis': ['arrangement', 'structure', 'build', 'drop', 'verse', 'chorus'],
+        'genre_analysis': ['genre', 'style', 'type', 'category'],
+        'comprehensive_analysis': ['everything', 'all', 'full', 'complete', 'detailed']
+    }
+    
+    # Check single words with context awareness
+    for intent, keywords in single_word_intents.items():
+        if any(keyword in user_lower for keyword in keywords):
+            return intent
+    
+    # Context-based fallback analysis
+    if any(word in user_lower for word in ['track', 'song', 'music', 'audio']):
+        return 'comprehensive_analysis'
+    
+    # Default fallback
+    return 'comprehensive_analysis'
+
 def generate_beatwizard_response(user_message, analysis_data):
     """
-    🧙‍♂️ THE BEATWIZARD - RULES OF WISDOM
+    🧙‍♂️ THE BEATWIZARD - SOPHISTICATED NATURAL LANGUAGE UNDERSTANDING
     
     THE SACRED COMMANDMENTS:
-    1. THOU SHALL NEVER speak without referencing the Analysis Data
+    1. THOU SHALL UNDERSTAND the true intent behind each question
     2. THOU SHALL ALWAYS cite specific numerical values 
     3. THOU SHALL NOT give generic advice - only data-driven insights
     4. THOU SHALL ground every statement in measurable metrics
@@ -655,35 +745,35 @@ def analyze_and_respond_with_data(user_message, **metrics):
     # Build the data summary for context
     data_summary = build_data_summary(**metrics)
     
-    # Analyze the user's intent and respond with SPECIFIC DATA
-    user_lower = user_message.lower()
+    # 🧠 INTELLIGENT INTENT CLASSIFICATION
+    intent = classify_user_intent(user_message, analysis_data)
     
-    # SPECIFIC PHRASE MATCHING FIRST (most specific)
-    if any(phrase in user_lower for phrase in ['what instruments', 'which instruments', 'what instrumentation', 'instrumentation do you hear', 'instruments do you hear', 'instruments in my track']):
-        return respond_with_instrumentation_analysis(data_summary, **metrics)
-    elif any(phrase in user_lower for phrase in ['how is my eq', 'eq advice', 'frequency balance', 'how\'s my eq']):
-        return respond_with_eq_analysis(data_summary, **metrics)
-    elif any(phrase in user_lower for phrase in ['how is my compression', 'compression advice', 'how\'s my compression']):
-        return respond_with_compression_analysis(data_summary, **metrics)
-    elif any(phrase in user_lower for phrase in ['vocal mix', 'vocal mixing', 'vocals mix', 'how are my vocals', 'vocal advice']):
-        return respond_with_vocal_analysis(data_summary, **metrics)
-    elif any(phrase in user_lower for phrase in ['drums and percussion', 'drum and percussion', 'how are my drums', 'drum advice']):
-        return respond_with_rhythm_analysis(data_summary, **metrics)
-    elif any(phrase in user_lower for phrase in ['reverb advice', 'spatial mix', 'how\'s my reverb', 'stereo field']):
-        return respond_with_spatial_analysis(data_summary, **metrics)
-    elif any(phrase in user_lower for phrase in ['make better', 'improve my track', 'how to improve', 'production tips', 'mixing tips']):
-        return respond_with_problems_data(data_summary, **metrics)
-    elif any(phrase in user_lower for phrase in ['similar artists', 'artists like', 'who would use', 'what artists']):
-        return respond_with_artist_suggestions(data_summary, **metrics)
+    # Route to appropriate response function based on classified intent
+    response_map = {
+        'instrumentation_analysis': respond_with_instrumentation_analysis,
+        'eq_analysis': respond_with_eq_analysis,
+        'compression_analysis': respond_with_compression_analysis,
+        'vocal_analysis': respond_with_vocal_analysis,
+        'spatial_analysis': respond_with_spatial_analysis,
+        'rhythm_analysis': respond_with_rhythm_analysis,
+        'improvement_suggestions': respond_with_problems_data,
+        'artist_suggestions': respond_with_artist_suggestions,
+        'genre_analysis': respond_with_genre_data,
+        'mix_overview': respond_with_mix_data,
+        'tempo_analysis': respond_with_tempo_data,
+        'key_analysis': respond_with_key_data,
+        'bass_analysis': respond_with_bass_data,
+        'stereo_analysis': respond_with_stereo_data,
+        'dynamics_analysis': respond_with_dynamics_data,
+        'frequency_analysis': respond_with_frequency_data,
+        'problems_analysis': respond_with_problems_data,
+        'arrangement_analysis': respond_with_arrangement_tips,
+        'comprehensive_analysis': respond_with_comprehensive_data
+    }
     
-    # SINGLE WORD MATCHING (less specific)
-    # TEMPO ANALYSIS - Always cite the actual BPM
-    elif any(word in user_lower for word in ['tempo', 'bpm', 'speed']):
-        return respond_with_tempo_data(data_summary, **metrics)
-    
-    # KEY ANALYSIS - Always cite the actual key
-    elif any(word in user_lower for word in ['key', 'scale', 'chord', 'pitch']) and 'keyboard' not in user_lower:
-        return respond_with_key_data(data_summary, **metrics)
+    # Execute the appropriate response function
+    response_function = response_map.get(intent, respond_with_comprehensive_data)
+    return response_function(data_summary, **metrics)
     
     # VOCAL MIX ANALYSIS - Specific to vocals
     elif any(phrase in user_lower for phrase in ['vocal mix', 'vocal mixing', 'vocals mix']):
@@ -2943,7 +3033,7 @@ def deployment_status():
             }
         },
         'current_phase': 'phase_1',
-        'railway_deployment': 'SUCCESS' if AUDIO_AVAILABLE is False else 'UNKNOWN',
+        'render_deployment': 'SUCCESS',
         'audio_processing': 'lite_enabled' if ANALYZE_LITE_AVAILABLE else 'disabled',
         'analyze_lite': {
             'enabled': ANALYZE_LITE_AVAILABLE,
@@ -3000,7 +3090,7 @@ def not_found(error):
     }), 404
 
 if __name__ == '__main__':
-    # Get port from environment (Render/Railway) or default to 8000 for local tests
+    # Get port from environment (Render) or default to 8000 for local tests
     port = int(os.environ.get('PORT', 8000))
     
     print("🚀 Starting BeatWizard Minimal API")
