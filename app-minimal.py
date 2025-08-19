@@ -444,8 +444,10 @@ def analyze_full():
                 # Normalize to a more readable scale (0-1000)
                 normalized_energy = band_energy * 1000
                 frequency_analysis[band_name] = float(normalized_energy)
+                print(f"Frequency band {band_name} ({low_freq}-{high_freq}Hz): {normalized_energy:.3f}")
             else:
                 frequency_analysis[band_name] = 0.0
+                print(f"Frequency band {band_name} ({low_freq}-{high_freq}Hz): NO BINS FOUND")
         
         # Stereo imaging (if stereo)
         if len(y.shape) > 1 and y.shape[1] > 1:
