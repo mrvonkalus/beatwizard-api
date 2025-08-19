@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 BeatWizard Flask App - Render.com Deployment
-Simplified version without audio dependencies - deploys reliably first
+Complete audio analysis API with advanced NLU conversation system
 """
 
 import os
@@ -55,6 +55,18 @@ except ImportError:
 
 # Initialize Flask app
 app = Flask(__name__)
+
+# Initialize NLU Conversation System
+NLU_AVAILABLE = False
+conversation_manager = None
+try:
+    from beatwizard.ai_integration.conversation_manager import ConversationManager, SkillLevel
+    conversation_manager = ConversationManager()
+    NLU_AVAILABLE = True
+    print("✅ Advanced NLU Conversation System initialized")
+except ImportError as e:
+    print(f"⚠️  NLU system not available: {e}")
+    NLU_AVAILABLE = False
 
 # Initialize Supabase client
 supabase_client = None
@@ -3035,6 +3047,7 @@ def deployment_status():
         'current_phase': 'phase_1',
         'render_deployment': 'SUCCESS',
         'audio_processing': 'lite_enabled' if ANALYZE_LITE_AVAILABLE else 'disabled',
+        'nlu_conversation': 'enabled' if NLU_AVAILABLE else 'disabled',
         'analyze_lite': {
             'enabled': ANALYZE_LITE_AVAILABLE,
             'versions': {
@@ -3050,6 +3063,252 @@ def deployment_status():
             'max_upload_mb': app.config.get('MAX_CONTENT_LENGTH', 0) // (1024 * 1024)
         }
     })
+
+# ================================================================
+# 🧠 INTELLIGENT CONVERSATION ENDPOINTS
+# ================================================================
+
+@app.route('/api/conversation/start', methods=['POST'])
+def start_conversation():
+    """Start a new intelligent conversation session"""
+    if not NLU_AVAILABLE:
+        return jsonify({
+            'error': 'NLU system not available',
+            'message': 'Advanced conversation features are not enabled in this deployment'
+        }), 503
+    
+    try:
+        data = request.get_json() or {}
+        
+        # Generate session ID
+        session_id = data.get('session_id', str(uuid.uuid4()))
+        
+        # Parse skill level
+        skill_level_str = data.get('skill_level', 'beginner').lower()
+        skill_level_map = {
+            'beginner': SkillLevel.BEGINNER,
+            'intermediate': SkillLevel.INTERMEDIATE,
+            'advanced': SkillLevel.ADVANCED,
+            'professional': SkillLevel.PROFESSIONAL
+        }
+        skill_level = skill_level_map.get(skill_level_str, SkillLevel.BEGINNER)
+        
+        # Get optional parameters
+        current_genre = data.get('genre')
+        user_id = data.get('user_id')
+        analysis_results = data.get('analysis_results')
+        
+        # Start conversation session
+        session = conversation_manager.start_conversation(
+            session_id=session_id,
+            user_id=user_id,
+            skill_level=skill_level,
+            current_genre=current_genre,
+            analysis_results=analysis_results
+        )
+        
+        # Get initial suggestions
+        suggestions = conversation_manager.get_conversation_suggestions(session_id)
+        
+        return jsonify({
+            'success': True,
+            'session_id': session_id,
+            'session_info': {
+                'skill_level': skill_level.value,
+                'genre': current_genre,
+                'has_analysis': analysis_results is not None
+            },
+            'welcome_message': "Welcome to BeatWizard's intelligent assistant! I'm here to help with your music production questions.",
+            'initial_suggestions': suggestions,
+            'message': 'Conversation session started successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error starting conversation: {e}")
+        return jsonify({
+            'error': 'Failed to start conversation',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/conversation/message', methods=['POST'])
+def send_message():
+    """Send a message to the intelligent conversation system"""
+    if not NLU_AVAILABLE:
+        return jsonify({
+            'error': 'NLU system not available',
+            'message': 'Advanced conversation features are not enabled in this deployment'
+        }), 503
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'error': 'No data provided',
+                'message': 'Request body must contain JSON data'
+            }), 400
+        
+        session_id = data.get('session_id')
+        user_message = data.get('message')
+        
+        if not session_id or not user_message:
+            return jsonify({
+                'error': 'Missing required fields',
+                'message': 'session_id and message are required'
+            }), 400
+        
+        # Process the user message
+        response = conversation_manager.process_user_input(session_id, user_message)
+        
+        # Get follow-up suggestions
+        suggestions = conversation_manager.get_conversation_suggestions(session_id)
+        
+        # Add suggestions to response
+        if suggestions:
+            response['follow_up_suggestions'] = suggestions
+        
+        return jsonify({
+            'success': True,
+            'response': response,
+            'timestamp': time.time()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error processing conversation message: {e}")
+        return jsonify({
+            'error': 'Failed to process message',
+            'message': str(e),
+            'suggestion': 'Try starting a new conversation session'
+        }), 500
+
+@app.route('/api/conversation/update', methods=['POST'])
+def update_conversation():
+    """Update conversation context (analysis results, skill level, etc.)"""
+    if not NLU_AVAILABLE:
+        return jsonify({
+            'error': 'NLU system not available',
+            'message': 'Advanced conversation features are not enabled in this deployment'
+        }), 503
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'error': 'No data provided',
+                'message': 'Request body must contain JSON data'
+            }), 400
+        
+        session_id = data.get('session_id')
+        if not session_id:
+            return jsonify({
+                'error': 'Missing session_id',
+                'message': 'session_id is required'
+            }), 400
+        
+        # Update analysis results if provided
+        if 'analysis_results' in data:
+            conversation_manager.update_analysis_results(session_id, data['analysis_results'])
+        
+        # Update skill level if provided
+        if 'skill_level' in data:
+            skill_level_str = data['skill_level'].lower()
+            skill_level_map = {
+                'beginner': SkillLevel.BEGINNER,
+                'intermediate': SkillLevel.INTERMEDIATE,
+                'advanced': SkillLevel.ADVANCED,
+                'professional': SkillLevel.PROFESSIONAL
+            }
+            skill_level = skill_level_map.get(skill_level_str)
+            if skill_level:
+                conversation_manager.update_user_skill_level(session_id, skill_level)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Conversation context updated successfully',
+            'updated_fields': list(data.keys())
+        })
+        
+    except Exception as e:
+        logger.error(f"Error updating conversation: {e}")
+        return jsonify({
+            'error': 'Failed to update conversation',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/conversation/summary', methods=['GET'])
+def get_conversation_summary():
+    """Get a summary of the conversation session"""
+    if not NLU_AVAILABLE:
+        return jsonify({
+            'error': 'NLU system not available',
+            'message': 'Advanced conversation features are not enabled in this deployment'
+        }), 503
+    
+    try:
+        session_id = request.args.get('session_id')
+        if not session_id:
+            return jsonify({
+                'error': 'Missing session_id',
+                'message': 'session_id parameter is required'
+            }), 400
+        
+        summary = conversation_manager.get_conversation_summary(session_id)
+        
+        if 'error' in summary:
+            return jsonify(summary), 404
+        
+        return jsonify({
+            'success': True,
+            'summary': summary
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting conversation summary: {e}")
+        return jsonify({
+            'error': 'Failed to get conversation summary',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/conversation/end', methods=['POST'])
+def end_conversation():
+    """End a conversation session"""
+    if not NLU_AVAILABLE:
+        return jsonify({
+            'error': 'NLU system not available',
+            'message': 'Advanced conversation features are not enabled in this deployment'
+        }), 503
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'error': 'No data provided',
+                'message': 'Request body must contain JSON data'
+            }), 400
+        
+        session_id = data.get('session_id')
+        if not session_id:
+            return jsonify({
+                'error': 'Missing session_id',
+                'message': 'session_id is required'
+            }), 400
+        
+        final_summary = conversation_manager.end_conversation(session_id)
+        
+        if 'error' in final_summary:
+            return jsonify(final_summary), 404
+        
+        return jsonify({
+            'success': True,
+            'message': 'Conversation ended successfully',
+            'final_summary': final_summary
+        })
+        
+    except Exception as e:
+        logger.error(f"Error ending conversation: {e}")
+        return jsonify({
+            'error': 'Failed to end conversation',
+            'message': str(e)
+        }), 500
 
 @app.errorhandler(413)
 def request_entity_too_large(error):
@@ -3085,7 +3344,12 @@ def not_found(error):
             'POST /api/upload',
             'GET /api/status',
             'POST /api/analyze-lite',
-            'POST /api/analyze'
+            'POST /api/analyze',
+            'POST /api/conversation/start',
+            'POST /api/conversation/message',
+            'POST /api/conversation/update',
+            'GET /api/conversation/summary',
+            'POST /api/conversation/end'
         ]
     }), 404
 
