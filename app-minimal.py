@@ -666,6 +666,10 @@ def analyze_and_respond_with_data(user_message, **metrics):
     elif any(word in user_lower for word in ['key', 'scale', 'harmonic', 'chord', 'pitch']):
         return respond_with_key_data(data_summary, **metrics)
     
+    # VOCAL MIX ANALYSIS - Specific to vocals
+    elif any(phrase in user_lower for phrase in ['vocal mix', 'vocal mixing', 'vocals mix']):
+        return respond_with_vocal_analysis(data_summary, **metrics)
+    
     # MIX ANALYSIS - Always cite LUFS, dynamics, frequency balance
     elif any(word in user_lower for word in ['mix', 'mixing', 'balance', 'loud', 'quiet']):
         return respond_with_mix_data(data_summary, **metrics)
@@ -718,9 +722,13 @@ def analyze_and_respond_with_data(user_message, **metrics):
     elif any(word in user_lower for word in ['vocal', 'vocals', 'voice', 'singing', 'singer', 'lyrics']):
         return respond_with_vocal_analysis(data_summary, **metrics)
     
-    # RHYTHM/DRUMS ANALYSIS
-    elif any(word in user_lower for word in ['rhythm', 'drums', 'drum', 'beat', 'percussion', 'groove']):
+    # RHYTHM/DRUMS ANALYSIS - Enhanced keywords
+    elif any(word in user_lower for word in ['rhythm', 'drums', 'drum', 'beat', 'percussion', 'groove']) or any(phrase in user_lower for phrase in ['drums and percussion', 'drum and percussion']):
         return respond_with_rhythm_analysis(data_summary, **metrics)
+    
+    # INSTRUMENTATION DETECTION
+    elif any(word in user_lower for word in ['instrument', 'instruments', 'guitar', 'piano', 'synth', 'strings']) or any(phrase in user_lower for phrase in ['what instruments', 'which instruments']):
+        return respond_with_instrumentation_analysis(data_summary, **metrics)
     
     # SUGGESTIONS/IMPROVEMENTS
     elif any(word in user_lower for word in ['suggestions', 'improve', 'better', 'tips', 'advice', 'help']):
@@ -1740,6 +1748,119 @@ def respond_with_rhythm_analysis(data_summary, **metrics):
         'message': message,
         'tone': 'rhythm_analytical',
         'cited_data': f"tempo: {tempo}, percussive: {percussive_ratio}, dynamic_range: {dynamic_range}, crest_factor: {crest_factor}"
+    }
+
+def respond_with_instrumentation_analysis(data_summary, **metrics):
+    """Analyze instrumentation based on frequency distribution and content ratios"""
+    sub_bass = data_summary['sub_bass'] or 0
+    bass = data_summary['bass'] or 0
+    low_mid = data_summary['low_mid'] or 0
+    mid = data_summary['mid'] or 0
+    high_mid = data_summary['high_mid'] or 0
+    presence = data_summary['presence'] or 0
+    brilliance = data_summary['brilliance'] or 0
+    harmonic_ratio = data_summary['harmonic_ratio']
+    percussive_ratio = data_summary['percussive_ratio']
+    tempo = data_summary['tempo']
+    
+    message = "**INSTRUMENTATION ANALYSIS**\n\n"
+    
+    # Analyze frequency distribution for instrument detection
+    total_energy = sub_bass + bass + low_mid + mid + high_mid + presence + brilliance
+    
+    if total_energy > 0:
+        bass_ratio = (sub_bass + bass) / total_energy
+        mid_ratio = (low_mid + mid + high_mid) / total_energy
+        high_ratio = (presence + brilliance) / total_energy
+        
+        message += f"**🎛️ Frequency Distribution:**\n"
+        message += f"• Low-End (20-250Hz): {bass_ratio:.1%} - {sub_bass + bass:.1f}\n"
+        message += f"• Mid-Range (250Hz-4kHz): {mid_ratio:.1%} - {low_mid + mid + high_mid:.1f}\n"
+        message += f"• High-End (4kHz+): {high_ratio:.1%} - {presence + brilliance:.1f}\n\n"
+        
+        # Instrument detection based on frequency patterns
+        detected_instruments = []
+        
+        # Kick drum detection (sub-bass + percussive content)
+        if sub_bass > 500 and percussive_ratio and percussive_ratio > 0.2:
+            detected_instruments.append("🥁 **Kick Drum** - Strong sub-bass presence")
+        
+        # Bass instrument detection (bass frequencies + harmonic content)
+        if bass > 300 and harmonic_ratio and harmonic_ratio > 0.3:
+            detected_instruments.append("🎸 **Bass Guitar/Synth Bass** - Prominent bass frequencies")
+        
+        # Vocal detection (mid-range + harmonic content)
+        if mid > 100 and harmonic_ratio and harmonic_ratio > 0.6:
+            detected_instruments.append("🎤 **Vocals** - Strong mid-range harmonic content")
+        
+        # Guitar detection (mid + high-mid)
+        if high_mid > 50 and mid > 50 and harmonic_ratio and harmonic_ratio > 0.5:
+            detected_instruments.append("🎸 **Guitar** - Mid and high-mid frequency presence")
+        
+        # Piano/Keys detection (wide frequency spread + harmonic)
+        if mid > 100 and high_mid > 50 and harmonic_ratio and harmonic_ratio > 0.7:
+            detected_instruments.append("🎹 **Piano/Keys** - Wide harmonic frequency spread")
+        
+        # Hi-hats/Cymbals detection (high frequencies + percussive)
+        if brilliance > 20 and percussive_ratio and percussive_ratio > 0.1:
+            detected_instruments.append("🥁 **Hi-hats/Cymbals** - High-frequency percussive content")
+        
+        # Strings detection (smooth mid-range + very harmonic)
+        if mid > 50 and high_mid > 30 and harmonic_ratio and harmonic_ratio > 0.8:
+            detected_instruments.append("🎻 **Strings/Pads** - Smooth harmonic content")
+        
+        if detected_instruments:
+            message += "**🎵 Likely Instruments Detected:**\n"
+            for instrument in detected_instruments:
+                message += f"• {instrument}\n"
+        else:
+            message += "**🎵 Instruments Detected:**\n"
+            message += "• Unable to clearly identify specific instruments\n"
+            message += "• This could indicate:\n"
+            message += "  - Heavy processing/effects\n"
+            message += "  - Electronic/synthetic sounds\n"
+            message += "  - Complex layering\n"
+        
+        message += "\n"
+    
+    # Content-based analysis
+    if harmonic_ratio and percussive_ratio:
+        message += f"**🎼 Content Analysis:**\n"
+        message += f"• Harmonic Content: {harmonic_ratio:.1%}\n"
+        message += f"• Percussive Content: {percussive_ratio:.1%}\n\n"
+        
+        if harmonic_ratio > 0.7:
+            message += "**Melodic Focus:** Track is heavily melodic\n"
+            message += "• Likely features: vocals, piano, guitar, strings\n"
+            message += "• Production focus: harmonic layering, chord progressions\n"
+        elif percussive_ratio > 0.5:
+            message += "**Rhythmic Focus:** Track is heavily percussive\n"
+            message += "• Likely features: drums, percussion, rhythmic elements\n"
+            message += "• Production focus: groove, rhythm, beat patterns\n"
+        else:
+            message += "**Balanced Content:** Good mix of melody and rhythm\n"
+            message += "• Likely features: full arrangement with various instruments\n"
+    
+    # Tempo-based instrument suggestions
+    if tempo:
+        message += f"\n**🎵 Tempo Context ({tempo:.1f} BPM):**\n"
+        if tempo < 90:
+            message += "• Typical for: ballads, slow rock, ambient\n"
+            message += "• Common instruments: piano, strings, soft drums\n"
+        elif tempo < 110:
+            message += "• Typical for: hip-hop, R&B, pop\n"
+            message += "• Common instruments: 808s, synths, vocals, trap drums\n"
+        elif tempo < 130:
+            message += "• Typical for: pop, rock, funk\n"
+            message += "• Common instruments: full band, electric guitars, bass\n"
+        else:
+            message += "• Typical for: EDM, house, techno\n"
+            message += "• Common instruments: synthesizers, electronic drums, bass\n"
+    
+    return {
+        'message': message,
+        'tone': 'instrumentation_analytical',
+        'cited_data': f"frequency_distribution, harmonic: {harmonic_ratio}, percussive: {percussive_ratio}, tempo: {tempo}"
     }
 
 def analyze_track_problems(analysis_data):
