@@ -431,21 +431,23 @@ def analyze_full():
             'brilliance': (6000, 20000)
         }
         
+        # Use FFT-based frequency analysis instead of mel-spectrogram
+        stft = librosa.stft(y, n_fft=2048, hop_length=512)
+        magnitude = np.abs(stft)
+        freqs = librosa.fft_frequencies(sr=sr, n_fft=2048)
+        
         frequency_analysis = {}
         for band_name, (low_freq, high_freq) in bands.items():
-            # Find mel bins for this frequency range
-            mel_low = librosa.hz_to_mel(low_freq)
-            mel_high = librosa.hz_to_mel(high_freq)
-            mel_bins = librosa.mel_frequencies(n_mels=128, fmin=0, fmax=sr//2)
-            band_bins = np.where((mel_bins >= mel_low) & (mel_bins <= mel_high))[0]
+            # Find frequency bins for this range
+            freq_mask = (freqs >= low_freq) & (freqs <= high_freq)
             
-            if len(band_bins) > 0:
-                # Calculate band energy and normalize
-                band_energy = np.mean(S[band_bins, :])
-                # Normalize to a more readable scale (0-1000)
-                normalized_energy = band_energy * 1000
+            if np.any(freq_mask):
+                # Calculate mean energy in this frequency range
+                band_energy = np.mean(magnitude[freq_mask, :])
+                # Normalize to a more readable scale
+                normalized_energy = band_energy * 100  # Better scaling
                 frequency_analysis[band_name] = float(normalized_energy)
-                print(f"Frequency band {band_name} ({low_freq}-{high_freq}Hz): {normalized_energy:.3f}")
+                print(f"Frequency band {band_name} ({low_freq}-{high_freq}Hz): {normalized_energy:.3f} (bins: {np.sum(freq_mask)})")
             else:
                 frequency_analysis[band_name] = 0.0
                 print(f"Frequency band {band_name} ({low_freq}-{high_freq}Hz): NO BINS FOUND")
