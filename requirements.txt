@@ -26,3 +26,10 @@ pydub>=0.25.1
 
 # Database & Auth
 supabase>=2.0.0
+
+# AI & NLU System
+openai>=1.0.0
+loguru>=0.7.0
+
+# Install BeatWizard package itself
+-e .

@@ -1,0 +1,3 @@
+"""
+BeatWizard Configuration Package
+"""
