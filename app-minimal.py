@@ -87,9 +87,10 @@ app.config.update(
 cors_origins = os.environ.get('BW_CORS_ORIGINS', os.environ.get('CORS_ORIGINS', '*')).split(',')
 CORS(app, 
      origins=['*'],  # Allow all origins for development
-     allow_headers=['Content-Type', 'Authorization'],
-     methods=['GET', 'POST', 'OPTIONS'],
-     supports_credentials=False
+     allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
+     methods=['GET', 'POST', 'OPTIONS', 'HEAD'],
+     supports_credentials=False,
+     max_age=86400  # Cache preflight requests for 24 hours
 )
 
 # Trust Railway's proxy
@@ -431,26 +432,43 @@ def analyze_full():
             'brilliance': (6000, 20000)
         }
         
-        # Use FFT-based frequency analysis instead of mel-spectrogram
-        stft = librosa.stft(y, n_fft=2048, hop_length=512)
-        magnitude = np.abs(stft)
-        freqs = librosa.fft_frequencies(sr=sr, n_fft=2048)
-        
-        frequency_analysis = {}
-        for band_name, (low_freq, high_freq) in bands.items():
-            # Find frequency bins for this range
-            freq_mask = (freqs >= low_freq) & (freqs <= high_freq)
+        # Use FFT-based frequency analysis with error handling
+        try:
+            stft = librosa.stft(y, n_fft=2048, hop_length=512)
+            magnitude = np.abs(stft)
+            freqs = librosa.fft_frequencies(sr=sr, n_fft=2048)
             
-            if np.any(freq_mask):
-                # Calculate mean energy in this frequency range
-                band_energy = np.mean(magnitude[freq_mask, :])
-                # Normalize to a more readable scale
-                normalized_energy = band_energy * 100  # Better scaling
-                frequency_analysis[band_name] = float(normalized_energy)
-                print(f"Frequency band {band_name} ({low_freq}-{high_freq}Hz): {normalized_energy:.3f} (bins: {np.sum(freq_mask)})")
-            else:
-                frequency_analysis[band_name] = 0.0
-                print(f"Frequency band {band_name} ({low_freq}-{high_freq}Hz): NO BINS FOUND")
+            frequency_analysis = {}
+            for band_name, (low_freq, high_freq) in bands.items():
+                try:
+                    # Find frequency bins for this range
+                    freq_mask = (freqs >= low_freq) & (freqs <= high_freq)
+                    
+                    if np.any(freq_mask):
+                        # Calculate mean energy in this frequency range
+                        band_energy = np.mean(magnitude[freq_mask, :])
+                        # Normalize to a more readable scale
+                        normalized_energy = band_energy * 100  # Better scaling
+                        frequency_analysis[band_name] = float(normalized_energy)
+                        print(f"Frequency band {band_name} ({low_freq}-{high_freq}Hz): {normalized_energy:.3f} (bins: {np.sum(freq_mask)})")
+                    else:
+                        frequency_analysis[band_name] = 0.0
+                        print(f"Frequency band {band_name} ({low_freq}-{high_freq}Hz): NO BINS FOUND")
+                except Exception as band_error:
+                    print(f"Error analyzing {band_name} band: {band_error}")
+                    frequency_analysis[band_name] = 0.0
+        except Exception as fft_error:
+            print(f"FFT frequency analysis failed: {fft_error}")
+            # Fallback to simple frequency analysis
+            frequency_analysis = {
+                'sub_bass': 0.0,
+                'bass': 0.0, 
+                'low_mid': 0.0,
+                'mid': 0.0,
+                'high_mid': 0.0,
+                'presence': 0.0,
+                'brilliance': 0.0
+            }
         
         # Stereo imaging (if stereo)
         if len(y.shape) > 1 and y.shape[1] > 1:
