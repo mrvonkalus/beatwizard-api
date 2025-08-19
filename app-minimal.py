@@ -45,11 +45,12 @@ except Exception:
 # Try to import audio libraries, but gracefully handle if missing
 AUDIO_AVAILABLE = False
 try:
-    # This will be added back gradually
-    print("⚠️  Audio libraries not available in minimal version")
-    AUDIO_AVAILABLE = False
+    import librosa
+    import pyloudnorm
+    print("✅ Full audio libraries are available!")
+    AUDIO_AVAILABLE = True
 except ImportError:
-    print("ℹ️  Running in minimal mode - audio processing disabled")
+    print("⚠️  Running in minimal mode - audio processing disabled")
     AUDIO_AVAILABLE = False
 
 # Initialize Flask app
