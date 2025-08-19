@@ -730,6 +730,18 @@ def analyze_and_respond_with_data(user_message, **metrics):
     elif any(word in user_lower for word in ['instrument', 'instruments', 'guitar', 'piano', 'synth', 'strings']) or any(phrase in user_lower for phrase in ['what instruments', 'which instruments']):
         return respond_with_instrumentation_analysis(data_summary, **metrics)
     
+    # EQ ANALYSIS
+    elif any(word in user_lower for word in ['eq', 'equalization', 'equalizer', 'frequency', 'frequencies']) or any(phrase in user_lower for phrase in ['how is my eq', 'eq advice', 'frequency balance']):
+        return respond_with_eq_analysis(data_summary, **metrics)
+    
+    # COMPRESSION ANALYSIS  
+    elif any(word in user_lower for word in ['compression', 'compressor', 'dynamics', 'punch', 'squeeze']) or any(phrase in user_lower for phrase in ['how is my compression', 'compression advice']):
+        return respond_with_compression_analysis(data_summary, **metrics)
+    
+    # REVERB/SPACE ANALYSIS
+    elif any(word in user_lower for word in ['reverb', 'space', 'room', 'depth', 'ambience', 'spatial']) or any(phrase in user_lower for phrase in ['reverb advice', 'spatial mix']):
+        return respond_with_spatial_analysis(data_summary, **metrics)
+    
     # SUGGESTIONS/IMPROVEMENTS
     elif any(word in user_lower for word in ['suggestions', 'improve', 'better', 'tips', 'advice', 'help']):
         return respond_with_arrangement_tips(data_summary, **metrics)
@@ -1861,6 +1873,355 @@ def respond_with_instrumentation_analysis(data_summary, **metrics):
         'message': message,
         'tone': 'instrumentation_analytical',
         'cited_data': f"frequency_distribution, harmonic: {harmonic_ratio}, percussive: {percussive_ratio}, tempo: {tempo}"
+    }
+
+def respond_with_eq_analysis(data_summary, **metrics):
+    """Analyze EQ and frequency balance with specific recommendations"""
+    sub_bass = data_summary['sub_bass'] or 0
+    bass = data_summary['bass'] or 0
+    low_mid = data_summary['low_mid'] or 0
+    mid = data_summary['mid'] or 0
+    high_mid = data_summary['high_mid'] or 0
+    presence = data_summary['presence'] or 0
+    brilliance = data_summary['brilliance'] or 0
+    
+    message = "**EQ ANALYSIS - FREQUENCY BALANCE**\n\n"
+    
+    # Detailed frequency breakdown
+    message += f"**🎛️ Frequency Spectrum Analysis:**\n"
+    message += f"• **Sub-Bass (20-60Hz):** {sub_bass:.1f}\n"
+    message += f"• **Bass (60-250Hz):** {bass:.1f}\n"
+    message += f"• **Low-Mid (250Hz-1kHz):** {low_mid:.1f}\n"
+    message += f"• **Mid (1-4kHz):** {mid:.1f}\n"
+    message += f"• **High-Mid (4-8kHz):** {high_mid:.1f}\n"
+    message += f"• **Presence (8-16kHz):** {presence:.1f}\n"
+    message += f"• **Brilliance (16kHz+):** {brilliance:.1f}\n\n"
+    
+    # Calculate total energy and ratios
+    total_energy = sub_bass + bass + low_mid + mid + high_mid + presence + brilliance
+    
+    if total_energy > 0:
+        # Frequency balance analysis
+        message += "**⚖️ EQ Balance Assessment:**\n"
+        
+        # Low-end analysis (Sub-bass + Bass)
+        low_end_ratio = (sub_bass + bass) / total_energy
+        if low_end_ratio > 0.6:
+            message += f"🔴 **Low-End Heavy** ({low_end_ratio:.1%})\n"
+            message += "• **Problem:** Track may sound muddy or boomy\n"
+            message += "• **Fix:** High-pass filter at 30-80Hz, reduce 120-200Hz\n"
+        elif low_end_ratio < 0.2:
+            message += f"🟡 **Low-End Light** ({low_end_ratio:.1%})\n"
+            message += "• **Problem:** Track may sound thin or weak\n"
+            message += "• **Fix:** Boost 60-120Hz, add sub-bass around 40Hz\n"
+        else:
+            message += f"✅ **Low-End Balanced** ({low_end_ratio:.1%})\n"
+        
+        # Mid-range analysis
+        mid_ratio = (low_mid + mid + high_mid) / total_energy
+        if mid_ratio < 0.3:
+            message += f"🔴 **Mid-Range Weak** ({mid_ratio:.1%})\n"
+            message += "• **Problem:** Vocals/instruments lack clarity\n"
+            message += "• **Fix:** Boost 1-4kHz for vocal presence\n"
+        elif mid_ratio > 0.7:
+            message += f"🟡 **Mid-Range Heavy** ({mid_ratio:.1%})\n"
+            message += "• **Problem:** May sound harsh or boxy\n"
+            message += "• **Fix:** Gentle cut around 500Hz-1kHz\n"
+        else:
+            message += f"✅ **Mid-Range Balanced** ({mid_ratio:.1%})\n"
+        
+        # High-end analysis  
+        high_end_ratio = (presence + brilliance) / total_energy
+        if high_end_ratio < 0.15:
+            message += f"🟡 **High-End Dull** ({high_end_ratio:.1%})\n"
+            message += "• **Problem:** Track lacks air and sparkle\n"
+            message += "• **Fix:** Gentle high-shelf boost at 8-10kHz\n"
+        elif high_end_ratio > 0.35:
+            message += f"🔴 **High-End Harsh** ({high_end_ratio:.1%})\n"
+            message += "• **Problem:** May sound sibilant or fatiguing\n"
+            message += "• **Fix:** De-esser or gentle cut at 6-8kHz\n"
+        else:
+            message += f"✅ **High-End Balanced** ({high_end_ratio:.1%})\n"
+        
+        message += "\n"
+    
+    # Specific EQ recommendations
+    message += "**🎚️ Specific EQ Recommendations:**\n"
+    
+    # Sub-bass recommendations
+    if sub_bass > 1000:
+        message += "• **Sub-Bass:** Too heavy - high-pass at 30-40Hz\n"
+    elif sub_bass < 100:
+        message += "• **Sub-Bass:** Add weight with gentle boost at 40-60Hz\n"
+    else:
+        message += "• **Sub-Bass:** Good foundation level\n"
+    
+    # Bass recommendations
+    if bass > 800:
+        message += "• **Bass:** Reduce boominess - cut 100-200Hz by 2-4dB\n"
+    elif bass < 200:
+        message += "• **Bass:** Add warmth - boost 80-120Hz by 2-3dB\n"
+    else:
+        message += "• **Bass:** Good warmth and punch\n"
+    
+    # Mid recommendations
+    if mid < 150:
+        message += "• **Mids:** Boost vocal clarity - gentle boost at 2-3kHz\n"
+    elif mid > 400:
+        message += "• **Mids:** May sound boxy - gentle cut at 400-800Hz\n"
+    else:
+        message += "• **Mids:** Good vocal/instrument presence\n"
+    
+    # High-mid recommendations
+    if high_mid < 80:
+        message += "• **High-Mids:** Add presence - boost 4-6kHz for clarity\n"
+    elif high_mid > 200:
+        message += "• **High-Mids:** May sound harsh - gentle cut at 3-5kHz\n"
+    else:
+        message += "• **High-Mids:** Good definition and clarity\n"
+    
+    # Presence recommendations
+    if presence < 40:
+        message += "• **Presence:** Add air - high-shelf boost at 8-10kHz\n"
+    elif presence > 120:
+        message += "• **Presence:** Too bright - gentle cut at 6-8kHz\n"
+    else:
+        message += "• **Presence:** Good sparkle and air\n"
+    
+    message += "\n**💡 Pro EQ Tips:**\n"
+    message += "• **Cut before you boost** - remove problem frequencies first\n"
+    message += "• **Use narrow Q for cuts** - surgical removal of issues\n"
+    message += "• **Use wide Q for boosts** - musical enhancement\n"
+    message += "• **Reference on multiple speakers** - ensure translation\n"
+    
+    return {
+        'message': message,
+        'tone': 'eq_analytical',
+        'cited_data': f"all_frequency_bands: sub_bass:{sub_bass:.1f}, bass:{bass:.1f}, mid:{mid:.1f}, presence:{presence:.1f}"
+    }
+
+def respond_with_compression_analysis(data_summary, **metrics):
+    """Analyze compression and dynamics with specific recommendations"""
+    dynamic_range = data_summary['dynamic_range'] or 0
+    crest_factor = data_summary['crest_factor'] or 0
+    lufs = data_summary['lufs'] or 0
+    peak_db = data_summary['peak_db'] or 0
+    rms_db = data_summary['rms_db'] or 0
+    
+    message = "**COMPRESSION & DYNAMICS ANALYSIS**\n\n"
+    
+    # Dynamic Range Analysis
+    message += f"**📊 Dynamic Range: {dynamic_range:.1f} dB**\n"
+    if dynamic_range > 20:
+        message += "🟢 **Excellent Dynamics** - Very musical and natural\n"
+        message += "• **Compression:** Light touch, preserve dynamics\n"
+        message += "• **Ratio:** 2:1 to 3:1 maximum\n"
+        message += "• **Attack:** Slow (10-30ms) to preserve transients\n"
+    elif dynamic_range > 15:
+        message += "✅ **Good Dynamics** - Well balanced\n"
+        message += "• **Compression:** Moderate compression acceptable\n"
+        message += "• **Ratio:** 3:1 to 4:1\n"
+        message += "• **Attack:** Medium (5-15ms)\n"
+    elif dynamic_range > 10:
+        message += "🟡 **Moderate Compression** - Some dynamics lost\n"
+        message += "• **Compression:** Already compressed, be gentle\n"
+        message += "• **Ratio:** 4:1 to 6:1 maximum\n"
+        message += "• **Attack:** Fast (1-5ms) for control\n"
+    elif dynamic_range > 6:
+        message += "🔴 **Heavy Compression** - Dynamics significantly reduced\n"
+        message += "• **Compression:** Avoid further compression\n"
+        message += "• **Problem:** May sound lifeless or pumping\n"
+        message += "• **Solution:** Use gentle multiband compression only\n"
+    else:
+        message += "🚨 **Over-Compressed** - Dynamics destroyed\n"
+        message += "• **Compression:** DO NOT add more compression\n"
+        message += "• **Problem:** Track sounds squashed and unnatural\n"
+        message += "• **Solution:** Re-mix with less compression\n"
+    
+    message += "\n"
+    
+    # Crest Factor Analysis
+    if crest_factor:
+        message += f"**⚡ Crest Factor: {crest_factor:.1f}**\n"
+        if crest_factor > 12:
+            message += "🟢 **Natural Peaks** - Excellent transient preservation\n"
+            message += "• **Compression:** Can handle more aggressive compression\n"
+            message += "• **Limiting:** Minimal limiting needed\n"
+        elif crest_factor > 8:
+            message += "✅ **Controlled Peaks** - Good balance\n"
+            message += "• **Compression:** Moderate compression working well\n"
+            message += "• **Limiting:** Light limiting for safety\n"
+        elif crest_factor > 5:
+            message += "🟡 **Limited Peaks** - Some transient reduction\n"
+            message += "• **Compression:** Peaks are being controlled\n"
+            message += "• **Limiting:** Already being limited\n"
+        else:
+            message += "🔴 **Heavily Limited** - Transients severely reduced\n"
+            message += "• **Compression:** Over-limited, reduce limiting\n"
+            message += "• **Problem:** Track may sound flat and lifeless\n"
+        
+        message += "\n"
+    
+    # LUFS and Loudness Context
+    if lufs:
+        message += f"**🔊 Loudness: {lufs:.1f} LUFS**\n"
+        if lufs < -23:
+            message += "🔴 **Too Quiet** - Needs more gain/compression\n"
+            message += "• **Compression:** Can be more aggressive to increase loudness\n"
+            message += "• **Target:** -14 to -16 LUFS for streaming\n"
+        elif lufs < -18:
+            message += "🟡 **Quiet** - Could be louder\n"
+            message += "• **Compression:** Gentle compression to increase level\n"
+            message += "• **Target:** -14 to -16 LUFS for streaming\n"
+        elif lufs < -12:
+            message += "✅ **Good Loudness** - Streaming ready\n"
+            message += "• **Compression:** Current level is appropriate\n"
+        else:
+            message += "🔴 **Too Loud** - May cause distortion\n"
+            message += "• **Compression:** Reduce compression/limiting\n"
+            message += "• **Problem:** Streaming services will turn it down\n"
+        
+        message += "\n"
+    
+    # Peak vs RMS Analysis
+    if peak_db is not None and rms_db is not None:
+        peak_rms_diff = peak_db - rms_db
+        message += f"**📈 Peak vs RMS: {peak_rms_diff:.1f} dB difference**\n"
+        if peak_rms_diff > 15:
+            message += "• **Analysis:** Very dynamic, peaks much higher than average\n"
+            message += "• **Compression:** Can use more compression for consistency\n"
+        elif peak_rms_diff > 10:
+            message += "• **Analysis:** Good dynamic range\n"
+            message += "• **Compression:** Moderate compression appropriate\n"
+        elif peak_rms_diff > 6:
+            message += "• **Analysis:** Controlled dynamics\n"
+            message += "• **Compression:** Already well compressed\n"
+        else:
+            message += "• **Analysis:** Very consistent levels\n"
+            message += "• **Compression:** Heavily compressed/limited\n"
+        
+        message += "\n"
+    
+    # Specific Compression Recommendations
+    message += "**🎚️ Compression Recommendations:**\n"
+    
+    if dynamic_range > 15:
+        message += "• **Bus Compression:** 2:1 ratio, slow attack (30ms), auto release\n"
+        message += "• **Individual Tracks:** Gentle 3:1-4:1 on vocals and bass\n"
+        message += "• **Limiting:** Light safety limiting at -1dB\n"
+    elif dynamic_range > 10:
+        message += "• **Bus Compression:** 3:1-4:1 ratio, medium attack (10ms)\n"
+        message += "• **Individual Tracks:** 4:1-6:1 on vocals, 3:1 on instruments\n"
+        message += "• **Limiting:** Moderate limiting at -0.5dB\n"
+    else:
+        message += "• **Bus Compression:** Avoid or use multiband only\n"
+        message += "• **Individual Tracks:** Reduce existing compression\n"
+        message += "• **Limiting:** Reduce limiting, allow more dynamics\n"
+    
+    message += "\n**💡 Pro Compression Tips:**\n"
+    message += "• **Attack Time:** Slow = preserves punch, Fast = controls transients\n"
+    message += "• **Release Time:** Match the rhythm of your track\n"
+    message += "• **Gain Reduction:** 3-6dB max for musical compression\n"
+    message += "• **Parallel Compression:** Blend compressed signal with dry for punch\n"
+    
+    return {
+        'message': message,
+        'tone': 'compression_analytical',
+        'cited_data': f"dynamic_range: {dynamic_range}, crest_factor: {crest_factor}, lufs: {lufs}"
+    }
+
+def respond_with_spatial_analysis(data_summary, **metrics):
+    """Analyze spatial characteristics and reverb/stereo field"""
+    stereo_correlation = data_summary['stereo_correlation'] or 0
+    stereo_width = data_summary['stereo_width'] or 0
+    
+    message = "**SPATIAL & REVERB ANALYSIS**\n\n"
+    
+    # Stereo Field Analysis
+    if stereo_correlation is not None:
+        message += f"**🎧 Stereo Correlation: {stereo_correlation:.2f}**\n"
+        if stereo_correlation > 0.9:
+            message += "🔴 **Very Narrow Stereo** - Mono-like image\n"
+            message += "• **Problem:** Track lacks stereo width and spaciousness\n"
+            message += "• **Reverb Solution:** Add stereo reverb to create width\n"
+            message += "• **Panning Solution:** Pan elements left/right for separation\n"
+            message += "• **Stereo Effects:** Use chorus, delay, or stereo imaging\n"
+        elif stereo_correlation > 0.7:
+            message += "🟡 **Narrow Stereo** - Limited width\n"
+            message += "• **Improvement:** Could benefit from more stereo spread\n"
+            message += "• **Reverb Solution:** Stereo reverb on aux sends\n"
+            message += "• **Panning Solution:** Strategic panning of instruments\n"
+        elif stereo_correlation > 0.3:
+            message += "✅ **Good Stereo Width** - Well balanced\n"
+            message += "• **Reverb:** Current spatial treatment working well\n"
+            message += "• **Maintain:** Keep current stereo image\n"
+        elif stereo_correlation > 0:
+            message += "🟡 **Very Wide Stereo** - May lack center focus\n"
+            message += "• **Potential Issue:** Center elements may get lost\n"
+            message += "• **Reverb Solution:** Ensure vocals/bass stay centered\n"
+        else:
+            message += "🔴 **Phase Issues** - Potential mono compatibility problems\n"
+            message += "• **Problem:** Track may disappear in mono playback\n"
+            message += "• **Reverb Solution:** Check reverb phase relationships\n"
+            message += "• **Fix:** Use correlation meter, adjust stereo processing\n"
+        
+        message += "\n"
+    
+    # Stereo Width Analysis
+    if stereo_width is not None:
+        message += f"**📏 Stereo Width: {stereo_width:.2f}**\n"
+        if stereo_width < 0.1:
+            message += "🔴 **Very Narrow Mix** - Lacks spatial dimension\n"
+            message += "• **Reverb Needs:** Add room/hall reverb for space\n"
+            message += "• **Delay Needs:** Stereo delays for width\n"
+        elif stereo_width < 0.3:
+            message += "🟡 **Narrow Mix** - Could use more space\n"
+            message += "• **Reverb Needs:** Medium room reverb\n"
+            message += "• **Delay Needs:** Subtle stereo delays\n"
+        elif stereo_width < 0.7:
+            message += "✅ **Good Width** - Nice spatial balance\n"
+            message += "• **Reverb Status:** Good spatial treatment\n"
+        else:
+            message += "🟡 **Very Wide** - May lack focus\n"
+            message += "• **Reverb Caution:** Ensure center elements stay focused\n"
+        
+        message += "\n"
+    
+    # Reverb Recommendations
+    message += "**🏛️ Reverb Recommendations:**\n"
+    
+    if stereo_correlation and stereo_correlation > 0.8:
+        message += "• **Room Reverb:** Add small room (0.8-1.2s) for natural space\n"
+        message += "• **Hall Reverb:** Long hall (2-4s) on vocals for depth\n"
+        message += "• **Plate Reverb:** Vintage plate for drums and percussion\n"
+        message += "• **Stereo Width:** Use stereo reverb plugins for width\n"
+    elif stereo_correlation and stereo_correlation > 0.5:
+        message += "• **Subtle Reverb:** Light room reverb to enhance existing space\n"
+        message += "• **Vocal Reverb:** Short decay (1-2s) to avoid muddiness\n"
+        message += "• **Instrument Reverb:** Match reverb character to track mood\n"
+    else:
+        message += "• **Careful Reverb:** Track already has good width\n"
+        message += "• **Focal Reverb:** Use reverb to create focal points\n"
+        message += "• **Mono Check:** Ensure reverb works in mono playback\n"
+    
+    message += "\n**🎚️ Spatial Processing Tips:**\n"
+    
+    # Genre-specific spatial advice
+    message += "• **Send Levels:** Start with 10-20% reverb send on vocals\n"
+    message += "• **Pre-Delay:** 20-40ms pre-delay for vocal clarity\n"
+    message += "• **High-Cut:** Roll off reverb above 8-10kHz to avoid harshness\n"
+    message += "• **Low-Cut:** High-pass reverb at 100-200Hz to avoid muddiness\n"
+    
+    message += "\n**💡 Pro Spatial Tips:**\n"
+    message += "• **Reverb Bus:** Use one reverb bus for cohesive space\n"
+    message += "• **Stereo Imaging:** Use M/S processing for width control\n"
+    message += "• **Mono Compatibility:** Always check mix in mono\n"
+    message += "• **Reference Tracks:** Compare stereo width to professional mixes\n"
+    
+    return {
+        'message': message,
+        'tone': 'spatial_analytical',
+        'cited_data': f"stereo_correlation: {stereo_correlation}, stereo_width: {stereo_width}"
     }
 
 def analyze_track_problems(analysis_data):
