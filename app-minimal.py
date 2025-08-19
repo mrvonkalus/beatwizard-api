@@ -85,9 +85,10 @@ app.config.update(
 # Configure CORS for production
 cors_origins = os.environ.get('BW_CORS_ORIGINS', os.environ.get('CORS_ORIGINS', '*')).split(',')
 CORS(app, 
-     origins=cors_origins,
+     origins=['*'],  # Allow all origins for development
      allow_headers=['Content-Type', 'Authorization'],
-     methods=['GET', 'POST', 'OPTIONS']
+     methods=['GET', 'POST', 'OPTIONS'],
+     supports_credentials=False
 )
 
 # Trust Railway's proxy
