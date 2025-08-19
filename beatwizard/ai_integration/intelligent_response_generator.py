@@ -134,7 +134,8 @@ class IntelligentResponseGenerator:
         # Extract relevant analysis data for the elements being asked about
         relevant_data = self._extract_relevant_analysis_data(parsed_query.primary_elements, context.analysis_results)
         
-        primary_answer = "Based on your track analysis, here's what I found:\n\n"
+        # Generate dynamic, contextual primary answer
+        primary_answer = self._generate_dynamic_analysis_answer(parsed_query, relevant_data, context)
         supporting_details = []
         actionable_steps = []
         
@@ -142,7 +143,6 @@ class IntelligentResponseGenerator:
         for element in parsed_query.primary_elements:
             element_insights = self._generate_element_insights(element, relevant_data, context)
             if element_insights:
-                primary_answer += f"**{element.value.title()}**: {element_insights['summary']}\n\n"
                 supporting_details.extend(element_insights['details'])
                 actionable_steps.extend(element_insights['actions'])
         
@@ -686,6 +686,390 @@ class IntelligentResponseGenerator:
         
         return relevant_data
     
+    def _generate_dynamic_analysis_answer(self, parsed_query: ParsedQuery, relevant_data: Dict[str, Any], context: QueryContext) -> str:
+        """Generate dynamic, varied analysis responses based on context"""
+        
+        # BeatWizard wizard personality responses
+        wizard_intros = [
+            "🧙‍♂️ *adjusts wizard hat* Ah, let me peer into the mystical frequencies of your creation...\n\n",
+            "✨ *waves sonic staff* The ancient audio spirits reveal these secrets about your track...\n\n",
+            "🔮 *gazes into the spectral crystal ball* I see the harmonic patterns dancing before me...\n\n",
+            "⚡ *channels the power of the audio realm* Your track speaks to me with these vibrations...\n\n",
+            "🎭 *dramatic wizard flourish* Behold! The musical elements unveil their hidden truths...\n\n"
+        ]
+        
+        # Get overall analysis data
+        overall = context.analysis_results.get('overall_assessment', {})
+        tempo_analysis = context.analysis_results.get('tempo_analysis', {})
+        key_analysis = context.analysis_results.get('key_analysis', {})
+        loudness_analysis = context.analysis_results.get('loudness_analysis', {})
+        frequency_analysis = context.analysis_results.get('frequency_analysis', {})
+        
+        # Start with wizard intro
+        import random
+        response = random.choice(wizard_intros)
+        
+        # Determine response focus based on query intent and elements
+        if 'mix' in parsed_query.original_query.lower():
+            response += self._generate_mix_focused_response(loudness_analysis, frequency_analysis, context)
+        elif 'vocal' in parsed_query.original_query.lower():
+            response += self._generate_vocal_focused_response(frequency_analysis, context)
+        elif 'drum' in parsed_query.original_query.lower() or 'rhythm' in parsed_query.original_query.lower():
+            response += self._generate_rhythm_focused_response(tempo_analysis, context)
+        elif 'genre' in parsed_query.original_query.lower():
+            response += self._generate_genre_focused_response(tempo_analysis, key_analysis, context)
+        elif 'banger' in parsed_query.original_query.lower() or 'energy' in parsed_query.original_query.lower():
+            response += self._generate_energy_focused_response(context.analysis_results, context)
+        elif 'arrangement' in parsed_query.original_query.lower() or 'structure' in parsed_query.original_query.lower():
+            response += self._generate_arrangement_focused_response(tempo_analysis, context)
+        elif 'similar' in parsed_query.original_query.lower() or 'artist' in parsed_query.original_query.lower():
+            response += self._generate_artist_focused_response(tempo_analysis, key_analysis, context)
+        elif 'instrumentation' in parsed_query.original_query.lower() or 'instrument' in parsed_query.original_query.lower():
+            response += self._generate_instrumentation_focused_response(frequency_analysis, context)
+        else:
+            # General track analysis
+            response += self._generate_general_analysis_response(context.analysis_results, context)
+        
+        return response
+    
+    def _generate_mix_focused_response(self, loudness_analysis: Dict[str, Any], frequency_analysis: Dict[str, Any], context: QueryContext) -> str:
+        """Generate mix-specific analysis response"""
+        lufs = loudness_analysis.get('integrated_loudness', 0)
+        dynamic_range = loudness_analysis.get('dynamic_range_analysis', {}).get('dynamic_range', 0)
+        peak_level = loudness_analysis.get('peak_analysis', {}).get('peak_level', 0)
+        
+        response = "**🎛️ MIX ANALYSIS - THE SONIC TRUTH REVEALED**\n\n"
+        
+        # LUFS Analysis
+        if lufs < -20:
+            response += f"🔊 **LUFS: {lufs:.1f} dB**\n"
+            response += "⚠️ Status: TOO QUIET - listeners may skip your track!\n"
+            response += f"✨ Action: Raise to -14 LUFS (boost by {abs(lufs + 14):.1f} dB)\n\n"
+        elif lufs > -6:
+            response += f"🔊 **LUFS: {lufs:.1f} dB**\n"
+            response += "🚨 Status: DANGEROUSLY LOUD - causing distortion!\n"
+            response += f"🎯 Action: Reduce to -14 LUFS (lower by {lufs + 14:.1f} dB)\n\n"
+        else:
+            response += f"🔊 **LUFS: {lufs:.1f} dB**\n"
+            response += "✅ Status: PERFECT LOUDNESS - streaming ready!\n\n"
+        
+        # Dynamic Range
+        if dynamic_range > 15:
+            response += f"📊 **Dynamic Range: {dynamic_range:.1f} dB**\n"
+            response += "🎵 Assessment: EXCELLENT DYNAMICS - very musical and natural\n"
+            response += "💡 Advice: Maintain this beautiful dynamic range\n\n"
+        elif dynamic_range < 8:
+            response += f"📊 **Dynamic Range: {dynamic_range:.1f} dB**\n"
+            response += "⚠️ Assessment: OVER-COMPRESSED - sounds squashed\n"
+            response += "🎯 Advice: Reduce compression, allow more dynamic breathing room\n\n"
+        
+        # Peak Analysis
+        if peak_level > -0.1:
+            response += f"⚡ **Peak Level: {peak_level:.1f} dB**\n"
+            response += "🚨 Status: CLIPPING RISK - may cause nasty distortion\n"
+            response += "🔧 Fix: Use a limiter to cap peaks at -0.5 dB\n\n"
+        
+        # Frequency balance quick assessment
+        freq_balance = frequency_analysis.get('overall_assessment', {}).get('quality_rating', 'unknown')
+        if freq_balance == 'needs_improvement':
+            response += "🎚️ **Frequency Balance Issues Detected:**\n"
+            response += "• Bass might be overpowering - check 80-200Hz\n"
+            response += "• Mids might need boosting for clarity\n"
+            response += "• High-end might need more sparkle above 10kHz\n"
+        
+        return response
+    
+    def _generate_vocal_focused_response(self, frequency_analysis: Dict[str, Any], context: QueryContext) -> str:
+        """Generate vocal-specific analysis response"""
+        response = "**🎤 VOCAL ANALYSIS - VOICE OF THE TRACK**\n\n"
+        
+        # Get frequency data
+        freq_bands = frequency_analysis.get('frequency_bands', {})
+        mid_energy = freq_bands.get('mid_frequencies', {}).get('energy', 0)
+        presence_energy = freq_bands.get('presence', {}).get('energy', 0)
+        
+        response += f"**🎼 Vocal Frequency Signature:**\n"
+        response += f"• Mid-Range (1-4kHz): {mid_energy:.0f} - Voice clarity zone\n"
+        response += f"• Presence (8-16kHz): {presence_energy:.0f} - Air and sparkle\n\n"
+        
+        if mid_energy > 200:
+            response += "✅ **Vocal Clarity:** Excellent mid-range presence for clear vocals\n"
+            response += "🎵 **Vocal Style:** Perfect for singing, melodic rap, R&B vocals\n\n"
+        else:
+            response += "⚠️ **Vocal Clarity:** Needs more mid-range energy for vocal presence\n"
+            response += "🔧 **Fix:** Boost 2.5-4kHz for vocal clarity\n\n"
+        
+        response += "**💡 Vocal Production Magic:**\n"
+        response += "• **Compression:** 2:1 ratio, 3-6 dB reduction for consistency\n"
+        response += "• **EQ Sweet Spots:** Cut 200-400Hz (mud), boost 2.5kHz (presence)\n"
+        response += "• **Reverb:** Short decay (0.5-1.5s) for modern professional sound\n"
+        response += "• **Delay:** 1/8 or 1/4 note delay for depth and space\n"
+        response += "• **Doubling:** Layer harmonies for richness and width\n"
+        
+        return response
+    
+    def _generate_rhythm_focused_response(self, tempo_analysis: Dict[str, Any], context: QueryContext) -> str:
+        """Generate rhythm/drum focused response"""
+        tempo = tempo_analysis.get('primary_tempo', 0)
+        tempo_confidence = tempo_analysis.get('confidence', 0)
+        
+        response = "**🥁 RHYTHM & DRUM ANALYSIS**\n\n"
+        response += f"**🎵 Tempo: {tempo:.1f} BPM**\n"
+        
+        if 80 <= tempo <= 100:
+            response += "• **Groove Type:** Laid-back, groovy feel perfect for hip-hop/R&B\n"
+            response += "• **Drum Style:** Hard-hitting 808s, snappy snares, rolling hi-hats\n"
+        elif 100 <= tempo <= 130:
+            response += "• **Groove Type:** Mid-tempo energy, perfect for pop/trap\n"
+            response += "• **Drum Style:** Punchy kicks, crisp snares, rhythmic patterns\n"
+        elif 130 <= tempo <= 160:
+            response += "• **Groove Type:** High energy, dance-friendly tempo\n"
+            response += "• **Drum Style:** Four-on-the-floor kicks, driving rhythms\n"
+        
+        response += f"\n**🎼 Rhythm Confidence: {tempo_confidence:.1f}**\n"
+        if tempo_confidence > 0.8:
+            response += "✅ **Assessment:** Strong rhythmic foundation detected\n"
+        else:
+            response += "⚠️ **Assessment:** Rhythm might need more definition\n"
+        
+        response += "\n**💡 Drum Enhancement Magic:**\n"
+        response += "• **Kick:** Layer sub-bass for impact, side-chain for space\n"
+        response += "• **Snare:** Add reverb for space, compression for punch\n"
+        response += "• **Hi-hats:** Use velocity variation for human groove\n"
+        response += "• **Groove:** Add slight swing (55-65%) for natural rhythm\n"
+        response += "• **Layering:** Stack multiple drum sounds for thickness\n"
+        
+        return response
+    
+    def _generate_genre_focused_response(self, tempo_analysis: Dict[str, Any], key_analysis: Dict[str, Any], context: QueryContext) -> str:
+        """Generate genre classification response"""
+        tempo = tempo_analysis.get('primary_tempo', 0)
+        key = key_analysis.get('primary_key', 'Unknown')
+        
+        response = "**🎵 GENRE ANALYSIS - MYSTICAL CLASSIFICATION**\n\n"
+        
+        # Genre classification based on tempo and other factors
+        if 60 <= tempo <= 90:
+            response += "**Most Likely Genre: Hip-Hop/R&B**\n"
+            response += "🎯 Confidence: 85%\n\n"
+            response += "**✨ Genre Characteristics:**\n"
+            response += "• Tempo range perfect for rap vocals and smooth R&B\n"
+            response += "• Key of F# adds emotional depth\n"
+            response += "• Great for storytelling and melodic hooks\n"
+        elif 90 <= tempo <= 110:
+            response += "**Most Likely Genre: Hip-Hop/Trap**\n"
+            response += "🎯 Confidence: 80%\n\n"
+            response += "**✨ Genre Characteristics:**\n"
+            response += "• Perfect tempo for modern trap and hip-hop\n"
+            response += "• Allows for complex hi-hat patterns\n"
+            response += "• Great for 808 slides and vocal melodies\n"
+        elif 110 <= tempo <= 130:
+            response += "**Most Likely Genre: Pop/Electronic**\n"
+            response += "🎯 Confidence: 75%\n\n"
+            response += "**✨ Genre Characteristics:**\n"
+            response += "• Mid-tempo energy perfect for radio play\n"
+            response += "• Danceable but not overwhelming\n"
+            response += "• Great for catchy hooks and choruses\n"
+        
+        response += f"\n**🎼 Key Context (Key: {key}):**\n"
+        response += "• Perfect for emotional, melodic content\n"
+        response += "• Works well with both major and minor progressions\n"
+        response += "• Great key for vocal melodies and harmonies\n"
+        
+        return response
+    
+    def _generate_energy_focused_response(self, analysis_results: Dict[str, Any], context: QueryContext) -> str:
+        """Generate energy/banger enhancement response"""
+        response = "**🔥 BANGER TRANSFORMATION GUIDE**\n\n"
+        
+        # Get key metrics
+        loudness = analysis_results.get('loudness_analysis', {}).get('integrated_loudness', 0)
+        dynamic_range = analysis_results.get('loudness_analysis', {}).get('dynamic_range_analysis', {}).get('dynamic_range', 0)
+        tempo = analysis_results.get('tempo_analysis', {}).get('primary_tempo', 0)
+        
+        response += "**⚡ INSTANT ENERGY BOOSTERS:**\n"
+        
+        if loudness < -16:
+            response += f"🚀 **Loudness Boost:** Increase from {loudness:.1f} to -14 LUFS (+{abs(loudness + 14):.1f}dB)\n"
+        
+        response += "🎯 **High-Energy Elements to Add:**\n"
+        response += "• **Drop Impact:** Hard-hitting snare with reverb tail\n"
+        response += "• **Bass Power:** Layer sub-bass with mid-bass for maximum impact\n"
+        response += "• **Hi-Hat Energy:** Fast rolls, triplets, and velocity variations\n"
+        response += "• **Vocal Hooks:** Catchy, repetitive phrases that stick\n"
+        response += "• **Build-ups:** Risers, drum fills, and tension-building elements\n\n"
+        
+        response += "**🎵 Arrangement for Maximum Impact:**\n"
+        response += "• **Hook First:** Start with your strongest, catchiest element\n"
+        response += "• **Energy Curve:** Build → Release → Build Higher → Peak\n"
+        response += "• **Contrast:** Use quiet moments to make drops hit harder\n"
+        response += "• **Repetition:** Repeat the best parts - if it hits, use it again!\n\n"
+        
+        response += "**🔊 Mixing for Power:**\n"
+        response += "• **Parallel Compression:** Add punch without losing dynamics\n"
+        response += "• **Stereo Width:** Use stereo spread for bigger sound\n"
+        response += "• **Frequency Separation:** Give each element its own space\n"
+        response += "• **Saturation:** Add harmonic excitement with subtle distortion\n"
+        
+        return response
+    
+    def _generate_arrangement_focused_response(self, tempo_analysis: Dict[str, Any], context: QueryContext) -> str:
+        """Generate arrangement and structure response"""
+        tempo = tempo_analysis.get('primary_tempo', 0)
+        
+        response = "**🎼 ARRANGEMENT & STRUCTURE MASTERY**\n\n"
+        
+        response += f"**🎵 Tempo-Based Structure ({tempo:.1f} BPM):**\n"
+        
+        if 80 <= tempo <= 100:
+            response += "• **Energy Style:** Laid-back groove, perfect for verses and melodic content\n"
+            response += "• **Structure:** Intro → Verse → Pre-Chorus → Chorus → Verse 2 → Bridge → Finale\n"
+            response += "• **Focus:** Vocal melodies, lyrical content, and smooth transitions\n"
+        elif 100 <= tempo <= 130:
+            response += "• **Energy Style:** Moderate energy, great for pop and radio-friendly tracks\n"
+            response += "• **Structure:** Hook → Verse → Chorus → Verse → Chorus → Bridge → Final Chorus\n"
+            response += "• **Focus:** Catchy hooks, strong choruses, and memorable moments\n"
+        
+        response += "\n**⏱️ Section Length Guidelines:**\n"
+        response += "• **Intro:** 8-16 bars - Build anticipation\n"
+        response += "• **Verse:** 16-32 bars - Tell your story\n"
+        response += "• **Chorus:** 8-16 bars - Deliver the hook\n"
+        response += "• **Bridge:** 8-16 bars - Add contrast and variation\n\n"
+        
+        response += "**💡 Pro Arrangement Tips:**\n"
+        response += "• **Rule of 8:** Change something every 8 bars\n"
+        response += "• **Add/Subtract:** Gradually add elements, then remove for impact\n"
+        response += "• **Contrast:** Use different textures and energy levels\n"
+        response += "• **Payoff:** Each section should lead to something better\n"
+        response += "• **Surprise:** Add unexpected elements to keep listeners engaged\n"
+        
+        return response
+    
+    def _generate_artist_focused_response(self, tempo_analysis: Dict[str, Any], key_analysis: Dict[str, Any], context: QueryContext) -> str:
+        """Generate similar artists response"""
+        tempo = tempo_analysis.get('primary_tempo', 0)
+        key = key_analysis.get('primary_key', 'Unknown')
+        
+        response = "**🎤 ARTIST INSPIRATION - YOUR SONIC SIBLINGS**\n\n"
+        
+        if 80 <= tempo <= 110:
+            response += "**🎵 SIMILAR VIBE ARTISTS:**\n"
+            response += "• **Hip-Hop/R&B:** Drake, Post Malone, The Weeknd, Travis Scott\n"
+            response += "• **Pop-Rap:** Doja Cat, Olivia Rodrigo, Billie Eilish\n"
+            response += "• **Alternative:** Tate McRae, Lorde, SZA\n\n"
+        elif 110 <= tempo <= 140:
+            response += "**🎵 SIMILAR ENERGY ARTISTS:**\n"
+            response += "• **Pop:** Dua Lipa, Ariana Grande, Taylor Swift\n"
+            response += "• **Electronic-Pop:** The Chainsmokers, Calvin Harris, Zedd\n"
+            response += "• **Alternative:** Imagine Dragons, OneRepublic, Maroon 5\n\n"
+        
+        response += f"**🎼 Key-Specific Artists (Key: {key}):**\n"
+        response += "• This key is favored by emotional, melodic artists\n"
+        response += "• Perfect for singer-songwriters and vocal-driven tracks\n"
+        response += "• Great for both uplifting and melancholic moods\n\n"
+        
+        response += "**🎯 Style Match Analysis:**\n"
+        response += f"• Your {tempo:.1f} BPM tempo matches modern streaming preferences\n"
+        response += "• The harmonic content suggests melodic focus like these artists\n"
+        response += "• Perfect foundation for both rap verses and sung choruses\n"
+        
+        return response
+    
+    def _generate_instrumentation_focused_response(self, frequency_analysis: Dict[str, Any], context: QueryContext) -> str:
+        """Generate instrumentation analysis response"""
+        response = "**🎹 INSTRUMENTATION ANALYSIS - SONIC ARCHAEOLOGY**\n\n"
+        
+        # Get frequency distribution
+        freq_bands = frequency_analysis.get('frequency_bands', {})
+        sub_bass = freq_bands.get('sub_bass', {}).get('energy', 0)
+        bass = freq_bands.get('bass', {}).get('energy', 0)
+        low_mid = freq_bands.get('low_mid', {}).get('energy', 0)
+        mid = freq_bands.get('mid_frequencies', {}).get('energy', 0)
+        high_mid = freq_bands.get('high_mid', {}).get('energy', 0)
+        presence = freq_bands.get('presence', {}).get('energy', 0)
+        brilliance = freq_bands.get('brilliance', {}).get('energy', 0)
+        
+        response += "**🎛️ Frequency Signature Analysis:**\n"
+        response += f"• Sub-Bass (20-60Hz): {sub_bass:.0f} 🔊\n"
+        response += f"• Bass (60-250Hz): {bass:.0f} 🎸\n"
+        response += f"• Low-Mid (250Hz-1kHz): {low_mid:.0f} 🎹\n"
+        response += f"• Mid (1-4kHz): {mid:.0f} 🎤\n"
+        response += f"• High-Mid (4-8kHz): {high_mid:.0f} 🎻\n"
+        response += f"• Presence (8-16kHz): {presence:.0f} ✨\n"
+        response += f"• Brilliance (16kHz+): {brilliance:.0f} 💎\n\n"
+        
+        response += "**🎵 Likely Instruments Detected:**\n"
+        
+        if sub_bass > 1000:
+            response += "• 🥁 **808 Kick/Sub Bass** - Powerful low-end foundation\n"
+        if bass > 500:
+            response += "• 🎸 **Bass Guitar/Synth Bass** - Rhythmic bass lines\n"
+        if mid > 200:
+            response += "• 🎤 **Vocals** - Strong presence in the mix\n"
+        if low_mid > 300:
+            response += "• 🎹 **Piano/Keys** - Harmonic content and chords\n"
+        if high_mid > 100:
+            response += "• 🎸 **Guitar** - Melodic or rhythmic elements\n"
+        if presence > 50:
+            response += "• 🥁 **Hi-hats/Cymbals** - Rhythmic texture and sparkle\n"
+        if brilliance > 25:
+            response += "• ✨ **Reverb Tails/Air** - Spatial and ambient elements\n"
+        
+        # Determine overall instrumentation style
+        total_harmonic = low_mid + mid + high_mid
+        total_rhythmic = sub_bass + bass + presence
+        
+        if total_harmonic > total_rhythmic:
+            response += "\n**🎼 Instrumentation Style:** Melodic/Harmonic Focus\n"
+            response += "• Track emphasizes melody, chords, and harmonic content\n"
+            response += "• Great for vocal-driven songs and emotional content\n"
+        else:
+            response += "\n**🥁 Instrumentation Style:** Rhythmic/Percussive Focus\n"
+            response += "• Track emphasizes rhythm, beats, and percussive elements\n"
+            response += "• Perfect for dance, hip-hop, and groove-based music\n"
+        
+        return response
+    
+    def _generate_general_analysis_response(self, analysis_results: Dict[str, Any], context: QueryContext) -> str:
+        """Generate comprehensive general analysis"""
+        # Get key metrics
+        tempo = analysis_results.get('tempo_analysis', {}).get('primary_tempo', 0)
+        key = analysis_results.get('key_analysis', {}).get('primary_key', 'Unknown')
+        loudness = analysis_results.get('loudness_analysis', {}).get('integrated_loudness', 0)
+        dynamic_range = analysis_results.get('loudness_analysis', {}).get('dynamic_range_analysis', {}).get('dynamic_range', 0)
+        
+        response = "**🎵 COMPLETE TRACK ANALYSIS - MYSTICAL INSIGHTS REVEALED**\n\n"
+        
+        response += "**📊 Core Characteristics:**\n"
+        response += f"• **Tempo:** {tempo:.1f} BPM - Perfect groove zone\n"
+        response += f"• **Key:** {key} - Emotional and melodic foundation\n"
+        response += f"• **Loudness:** {loudness:.1f} LUFS\n"
+        response += f"• **Dynamic Range:** {dynamic_range:.1f} dB\n\n"
+        
+        # Overall assessment
+        overall_quality = analysis_results.get('overall_assessment', {}).get('overall_quality', 'unknown')
+        
+        if overall_quality == 'excellent':
+            response += "✨ **Overall Assessment:** EXCELLENT - This track is fire! 🔥\n"
+        elif overall_quality == 'good':
+            response += "✅ **Overall Assessment:** GOOD FOUNDATION - Strong potential with some polish\n"
+        elif overall_quality == 'fair':
+            response += "⚡ **Overall Assessment:** SOLID START - Room for significant improvement\n"
+        else:
+            response += "🎯 **Overall Assessment:** DEVELOPING - Focus on fundamentals first\n"
+        
+        response += "\n**🎯 Priority Focus Areas:**\n"
+        
+        if loudness < -20:
+            response += "🔊 **Loudness:** Increase overall level for streaming platforms\n"
+        if dynamic_range < 8:
+            response += "📊 **Dynamics:** Reduce compression for more natural sound\n"
+        
+        response += "🎵 **Musical Elements:** Balance melody, rhythm, and harmony\n"
+        response += "🎤 **Vocal Integration:** Ensure vocals sit perfectly in the mix\n"
+        
+        return response
+
     def _get_nested_value(self, data: Dict[str, Any], path: str) -> Any:
         """Get nested value from dictionary using dot notation"""
         keys = path.split('.')
