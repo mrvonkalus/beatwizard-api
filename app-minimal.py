@@ -658,12 +658,31 @@ def analyze_and_respond_with_data(user_message, **metrics):
     # Analyze the user's intent and respond with SPECIFIC DATA
     user_lower = user_message.lower()
     
+    # SPECIFIC PHRASE MATCHING FIRST (most specific)
+    if any(phrase in user_lower for phrase in ['what instruments', 'which instruments', 'what instrumentation', 'instrumentation do you hear', 'instruments do you hear', 'instruments in my track']):
+        return respond_with_instrumentation_analysis(data_summary, **metrics)
+    elif any(phrase in user_lower for phrase in ['how is my eq', 'eq advice', 'frequency balance', 'how\'s my eq']):
+        return respond_with_eq_analysis(data_summary, **metrics)
+    elif any(phrase in user_lower for phrase in ['how is my compression', 'compression advice', 'how\'s my compression']):
+        return respond_with_compression_analysis(data_summary, **metrics)
+    elif any(phrase in user_lower for phrase in ['vocal mix', 'vocal mixing', 'vocals mix', 'how are my vocals', 'vocal advice']):
+        return respond_with_vocal_analysis(data_summary, **metrics)
+    elif any(phrase in user_lower for phrase in ['drums and percussion', 'drum and percussion', 'how are my drums', 'drum advice']):
+        return respond_with_rhythm_analysis(data_summary, **metrics)
+    elif any(phrase in user_lower for phrase in ['reverb advice', 'spatial mix', 'how\'s my reverb', 'stereo field']):
+        return respond_with_spatial_analysis(data_summary, **metrics)
+    elif any(phrase in user_lower for phrase in ['make better', 'improve my track', 'how to improve', 'production tips', 'mixing tips']):
+        return respond_with_problems_data(data_summary, **metrics)
+    elif any(phrase in user_lower for phrase in ['similar artists', 'artists like', 'who would use', 'what artists']):
+        return respond_with_artist_suggestions(data_summary, **metrics)
+    
+    # SINGLE WORD MATCHING (less specific)
     # TEMPO ANALYSIS - Always cite the actual BPM
-    if any(word in user_lower for word in ['tempo', 'bpm', 'speed', 'fast', 'slow']):
+    elif any(word in user_lower for word in ['tempo', 'bpm', 'speed']):
         return respond_with_tempo_data(data_summary, **metrics)
     
     # KEY ANALYSIS - Always cite the actual key
-    elif any(word in user_lower for word in ['key', 'scale', 'harmonic', 'chord', 'pitch']):
+    elif any(word in user_lower for word in ['key', 'scale', 'chord', 'pitch']) and 'keyboard' not in user_lower:
         return respond_with_key_data(data_summary, **metrics)
     
     # VOCAL MIX ANALYSIS - Specific to vocals
@@ -727,7 +746,7 @@ def analyze_and_respond_with_data(user_message, **metrics):
         return respond_with_rhythm_analysis(data_summary, **metrics)
     
     # INSTRUMENTATION DETECTION
-    elif any(word in user_lower for word in ['instrument', 'instruments', 'guitar', 'piano', 'synth', 'strings']) or any(phrase in user_lower for phrase in ['what instruments', 'which instruments']):
+    elif any(word in user_lower for word in ['instrument', 'instruments', 'guitar', 'piano', 'synth', 'strings', 'instrumentation']) or any(phrase in user_lower for phrase in ['what instruments', 'which instruments', 'what instrumentation', 'instrumentation do you hear']):
         return respond_with_instrumentation_analysis(data_summary, **metrics)
     
     # EQ ANALYSIS
