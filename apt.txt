@@ -5,4 +5,6 @@ libavcodec-extra
 libavformat-dev
 libavutil-dev
 libswresample-dev
+libavdevice-dev
+libavfilter-dev
 

@@ -376,8 +376,10 @@ def analyze_full():
                 except Exception as pydub_error:
                     return jsonify({
                         'error': 'M4A decoder error', 
-                        'detail': f'Both librosa and pydub failed. Librosa: {str(librosa_error)}, Pydub: {str(pydub_error)}',
-                        'suggestion': 'Try uploading a WAV, FLAC, or MP3 file instead'
+                        'detail': f'M4A format requires additional codecs. Librosa: {str(librosa_error)}, Pydub: {str(pydub_error)}',
+                        'suggestion': 'For best results, please convert to WAV or FLAC format and try again. Online converters: cloudconvert.com or freeconvert.com',
+                        'supported_formats': ['WAV', 'FLAC', 'MP3', 'OGG'],
+                        'status': 'ffmpeg_dependency_issue'
                     }), 415
             else:
                 # Re-raise for non-M4A files
@@ -3079,7 +3081,7 @@ def deployment_status():
                 ]
             }
         },
-        'current_phase': 'phase_1',
+        'current_phase': 'phase_1_m4a_enhanced',
         'render_deployment': 'SUCCESS',
         'audio_processing': 'lite_enabled' if ANALYZE_LITE_AVAILABLE else 'disabled',
         'nlu_conversation': 'enabled' if NLU_AVAILABLE else 'disabled',
