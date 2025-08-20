@@ -332,7 +332,11 @@ def analyze_full():
     lower = filename.lower()
     ext = '.' + lower.rsplit('.', 1)[1] if '.' in lower else ''
     if ext not in FULL_ANALYZE_ALLOWED_EXTS:
-        return jsonify({'error': 'Unsupported file extension', 'allowed_exts': sorted(list(FULL_ANALYZE_ALLOWED_EXTS))}), 415
+        return jsonify({
+            'error': 'Unsupported file extension', 
+            'allowed_exts': sorted(list(FULL_ANALYZE_ALLOWED_EXTS)),
+            'recommendation': 'For best results, use WAV or FLAC. MP3 and M4A are supported but may require additional processing time.'
+        }), 415
 
     content_len = request.content_length or 0
     if content_len > app.config['MAX_CONTENT_LENGTH']:
@@ -346,8 +350,39 @@ def analyze_full():
     bio = io.BytesIO(data)
 
     try:
-        # Load the full audio file - let librosa determine the actual duration
-        y, sr = librosa.load(bio, sr=TARGET_SR, mono=True)
+        # Try loading with librosa first (works for most formats)
+        try:
+            y, sr = librosa.load(bio, sr=TARGET_SR, mono=True)
+        except Exception as librosa_error:
+            # If librosa fails with M4A, try with pydub first then librosa
+            if ext.lower() in ['.m4a', '.aac']:
+                bio.seek(0)
+                try:
+                    from pydub import AudioSegment
+                    import tempfile
+                    
+                    # Convert M4A to WAV using pydub as fallback
+                    audio_segment = AudioSegment.from_file(bio, format="m4a")
+                    
+                    # Export to temporary WAV
+                    with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_wav:
+                        audio_segment.export(temp_wav.name, format="wav")
+                        y, sr = librosa.load(temp_wav.name, sr=TARGET_SR, mono=True)
+                        
+                    # Clean up temp file
+                    import os
+                    os.unlink(temp_wav.name)
+                    
+                except Exception as pydub_error:
+                    return jsonify({
+                        'error': 'M4A decoder error', 
+                        'detail': f'Both librosa and pydub failed. Librosa: {str(librosa_error)}, Pydub: {str(pydub_error)}',
+                        'suggestion': 'Try uploading a WAV, FLAC, or MP3 file instead'
+                    }), 415
+            else:
+                # Re-raise for non-M4A files
+                raise librosa_error
+                
         actual_duration = len(y) / sr
         
         # Debug: Check if we're getting reasonable audio data
