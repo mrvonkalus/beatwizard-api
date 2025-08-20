@@ -46,7 +46,7 @@ CORS(app,
      methods=['GET', 'POST', 'OPTIONS']
 )
 
-# Trust Railway's proxy
+# Trust Render's proxy (adapted from Railway)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 # Initialize BeatWizard analyzer
@@ -284,14 +284,19 @@ def not_found(error):
 # Initialize logging
 setup_logging()
 
+def initialize_app():
+    """Initialize the application components"""
+    init_analyzer()
+    setup_logging()
+
 if __name__ == '__main__':
-    # Get port from environment (Railway provides this)
+    # Get port from environment (Render provides this)
     port = int(os.environ.get('PORT', 8080))
     
     # Initialize the app
     initialize_app()
     
-    logger.info("🚀 Starting BeatWizard Production API")
+    logger.info("🚀 Starting BeatWizard Enhanced API")
     logger.info(f"📱 Running on port: {port}")
     logger.info(f"🔧 Debug mode: {app.debug}")
     
