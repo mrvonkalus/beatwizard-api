@@ -18,8 +18,13 @@ from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
-import boto3
-from botocore.exceptions import ClientError
+# Optional cloud storage (not needed for Render deployment)
+try:
+    import boto3
+    from botocore.exceptions import ClientError
+    BOTO3_AVAILABLE = True
+except ImportError:
+    BOTO3_AVAILABLE = False
 
 # Import our BeatWizard system
 from beatwizard import EnhancedAudioAnalyzer
@@ -71,6 +76,8 @@ def allowed_file(filename: str) -> bool:
 
 def setup_cloud_storage():
     """Setup cloud storage client (optional)"""
+    if not BOTO3_AVAILABLE:
+        return None
     try:
         if os.environ.get('AWS_ACCESS_KEY_ID'):
             return boto3.client('s3')
