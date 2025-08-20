@@ -689,14 +689,49 @@ class IntelligentResponseGenerator:
     def _generate_dynamic_analysis_answer(self, parsed_query: ParsedQuery, relevant_data: Dict[str, Any], context: QueryContext) -> str:
         """Generate dynamic, varied analysis responses based on context"""
         
-        # BeatWizard wizard personality responses
-        wizard_intros = [
-            "🧙‍♂️ *adjusts wizard hat* Ah, let me peer into the mystical frequencies of your creation...\n\n",
-            "✨ *waves sonic staff* The ancient audio spirits reveal these secrets about your track...\n\n",
-            "🔮 *gazes into the spectral crystal ball* I see the harmonic patterns dancing before me...\n\n",
-            "⚡ *channels the power of the audio realm* Your track speaks to me with these vibrations...\n\n",
-            "🎭 *dramatic wizard flourish* Behold! The musical elements unveil their hidden truths...\n\n"
-        ]
+        # Enhanced BeatWizard wizard personality responses with context awareness
+        time_of_day = self._get_time_context()
+        skill_level = context.user_skill_level
+        
+        wizard_intros = []
+        
+        # Skill-level adaptive intros
+        if skill_level == SkillLevel.BEGINNER:
+            wizard_intros = [
+                "🧙‍♂️ *adjusts pointy hat with a gentle smile* Welcome, young apprentice! Let me guide you through the magical mysteries of your creation...\n\n",
+                "✨ *waves beginner-friendly sonic wand* Fear not! The audio spirits whisper gentle secrets about your track...\n\n",
+                "🔮 *peers into the crystal ball with encouraging eyes* I see great potential in these harmonic patterns...\n\n",
+                "📚 *opens ancient tome of music wisdom* Come, let us explore the enchanted elements of your music together...\n\n",
+                "🌟 *sprinkles musical stardust* Every great producer started where you are - let me reveal what your track teaches us...\n\n"
+            ]
+        elif skill_level == SkillLevel.INTERMEDIATE:
+            wizard_intros = [
+                "🧙‍♂️ *adjusts wizard hat with knowing confidence* Ah, a skilled practitioner! Let me unveil the deeper mysteries within your sonic realm...\n\n",
+                "⚡ *channels focused energy through crystal staff* Your growing mastery shows - now let's discover what the frequencies reveal...\n\n",
+                "🔮 *gazes intently into swirling spectral visions* The harmonic spirits dance with more complexity in your creation...\n\n",
+                "🎯 *dramatic flourish with precision* Behold! Your track speaks the language of advancing artistry...\n\n",
+                "✨ *weaves intricate sonic spells* I sense the evolution in your craft - let me decode these musical secrets...\n\n"
+            ]
+        else:  # ADVANCED
+            wizard_intros = [
+                "🧙‍♂️ *adjusts master wizard's crown* Greetings, fellow sonic architect! Let us peer into the sophisticated depths of your masterwork...\n\n",
+                "⚡ *channels raw mystical power* Your expertise resonates through the ether - the ancient frequencies bow to your command...\n\n",
+                "🔮 *communes with the highest audio spirits* I sense masterful intention in every harmonic choice...\n\n",
+                "🎭 *performs elaborate ritual of sonic divination* Witness! Your track reveals the marks of true artistry...\n\n",
+                "✨ *summons cosmic production wisdom* Together we shall unlock the final secrets hidden within your sonic tapestry...\n\n"
+            ]
+        
+        # Add time-aware variations
+        if time_of_day == "night":
+            wizard_intros.extend([
+                "🌙 *by moonlight, adjusts mystical hood* The nocturnal audio spirits whisper secrets of your midnight creation...\n\n",
+                "🌟 *under starlit studio skies* The cosmic frequencies align to reveal your track's hidden potential...\n\n"
+            ])
+        elif time_of_day == "morning":
+            wizard_intros.extend([
+                "🌅 *morning light illuminates ancient scrolls* The dawn brings fresh insights about your musical creation...\n\n",
+                "☀️ *solar-powered sonic staff glows* The morning audio spirits are particularly chatty about your track...\n\n"
+            ])
         
         # Get overall analysis data
         overall = context.analysis_results.get('overall_assessment', {})
@@ -738,7 +773,13 @@ class IntelligentResponseGenerator:
         dynamic_range = loudness_analysis.get('dynamic_range_analysis', {}).get('dynamic_range', 0)
         peak_level = loudness_analysis.get('peak_analysis', {}).get('peak_level', 0)
         
-        response = "**🎛️ MIX ANALYSIS - THE SONIC TRUTH REVEALED**\n\n"
+        # Varied mix analysis headers based on skill level
+        if context.user_skill_level == SkillLevel.BEGINNER:
+            response = "**🎛️ YOUR MIX UNDER THE WIZARD'S MAGNIFYING GLASS**\n\n"
+        elif context.user_skill_level == SkillLevel.INTERMEDIATE:
+            response = "**🎛️ DETAILED MIX ANALYSIS - PRECISION MEASUREMENTS**\n\n"
+        else:
+            response = "**🎛️ PROFESSIONAL MIX ASSESSMENT - TECHNICAL DEEP DIVE**\n\n"
         
         # LUFS Analysis
         if lufs < -20:
@@ -781,7 +822,17 @@ class IntelligentResponseGenerator:
     
     def _generate_vocal_focused_response(self, frequency_analysis: Dict[str, Any], context: QueryContext) -> str:
         """Generate vocal-specific analysis response"""
-        response = "**🎤 VOCAL ANALYSIS - VOICE OF THE TRACK**\n\n"
+        
+        # Dynamic vocal headers with personality
+        vocal_headers = [
+            "**🎤 VOCAL ALCHEMY - THE MAGICAL VOICE BREAKDOWN**\n\n",
+            "**🎤 VOCAL CRYSTAL BALL - READING THE HARMONIC AURA**\n\n",
+            "**🎤 THE VOCAL ORACLE SPEAKS - MYSTICAL VOICE ANALYSIS**\n\n",
+            "**🎤 SONIC VOICE DIVINATION - FREQUENCY FORTUNE TELLING**\n\n"
+        ]
+        
+        import random
+        response = random.choice(vocal_headers)
         
         # Get frequency data
         freq_bands = frequency_analysis.get('frequency_bands', {})
@@ -1213,3 +1264,17 @@ class IntelligentResponseGenerator:
             return level_encouragements[0]  # For now, return first one
         
         return "Keep pushing forward - every step is progress!"
+    
+    def _get_time_context(self) -> str:
+        """Get time of day for context-aware responses"""
+        from datetime import datetime
+        
+        hour = datetime.now().hour
+        if 5 <= hour < 12:
+            return "morning"
+        elif 12 <= hour < 17:
+            return "afternoon"
+        elif 17 <= hour < 21:
+            return "evening"
+        else:
+            return "night"
