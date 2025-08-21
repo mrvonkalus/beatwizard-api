@@ -8,7 +8,13 @@ import librosa
 from typing import Dict, List, Tuple, Optional
 from loguru import logger
 from scipy import stats
-from sklearn.preprocessing import StandardScaler
+# Optional scikit-learn for advanced features
+try:
+    from sklearn.preprocessing import StandardScaler
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    StandardScaler = None
 
 from config.settings import audio_settings
 
@@ -63,6 +69,10 @@ class MoodDetector:
             'rhythmic_features': self._extract_rhythmic_features,
             'harmonic_features': self._extract_harmonic_features
         }
+        
+        # Check for optional dependencies
+        if not SKLEARN_AVAILABLE:
+            logger.warning("scikit-learn not available - using simplified mood detection")
         
         logger.debug("MoodDetector initialized")
     
