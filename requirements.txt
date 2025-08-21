@@ -35,5 +35,8 @@ loguru>=0.7.0
 pydantic>=2.0.0
 pydantic-settings>=2.0.0
 
+# Machine Learning for Mood Detection
+scikit-learn>=1.0.0
+
 # Install BeatWizard package itself
 -e .
