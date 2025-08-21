@@ -21,6 +21,7 @@ from ..analysis.rhythmic_analyzer import RhythmicAnalyzer
 from ..analysis.harmonic_analyzer import HarmonicAnalyzer
 from ..analysis.mood_detector import MoodDetector
 from ..analysis.mastering_readiness import MasteringReadinessAnalyzer
+from ..analysis.platform_optimizer import PlatformOptimizer
 from ..ai_integration.intelligent_feedback import IntelligentFeedbackGenerator
 from config.settings import audio_settings, performance_settings, project_settings
 
@@ -66,6 +67,7 @@ class EnhancedAudioAnalyzer:
         self.harmonic_analyzer = HarmonicAnalyzer(self.sample_rate, self.hop_length)
         self.mood_detector = MoodDetector(self.sample_rate, self.hop_length)
         self.mastering_readiness = MasteringReadinessAnalyzer()
+        self.platform_optimizer = PlatformOptimizer()
         
         # Initialize AI feedback generator
         self.feedback_generator = IntelligentFeedbackGenerator()
@@ -115,7 +117,7 @@ class EnhancedAudioAnalyzer:
             
             # Determine analysis types to perform
             if analysis_types is None:
-                analysis_types = ['tempo', 'key', 'frequency', 'loudness', 'stereo', 'sound_selection', 'rhythm', 'harmony', 'mood', 'mastering_readiness']
+                analysis_types = ['tempo', 'key', 'frequency', 'loudness', 'stereo', 'sound_selection', 'rhythm', 'harmony', 'mood', 'mastering_readiness', 'platform_optimization']
             
             # Perform comprehensive analysis
             analysis_results = self._perform_analysis(audio_data, metadata, analysis_types)
@@ -282,7 +284,7 @@ class EnhancedAudioAnalyzer:
                 logger.error(f"Mood analysis failed: {e}")
                 results['mood_analysis'] = {'error': str(e)}
         
-        # Mastering Readiness Analysis (NEW!)
+        # Mastering Readiness Analysis
         if 'mastering_readiness' in analysis_types:
             logger.debug("Performing mastering readiness assessment")
             try:
@@ -299,6 +301,23 @@ class EnhancedAudioAnalyzer:
             except Exception as e:
                 logger.error(f"Mastering readiness analysis failed: {e}")
                 results['mastering_readiness'] = {'error': str(e)}
+        
+        # Platform Optimization Analysis (NEW!)
+        if 'platform_optimization' in analysis_types:
+            logger.debug("Performing platform optimization analysis")
+            try:
+                # Collect required analyses for platform optimization
+                frequency_analysis = results.get('frequency_analysis', {})
+                loudness_analysis = results.get('loudness_analysis', {})
+                stereo_analysis = results.get('stereo_analysis', {})
+                mood_analysis = results.get('mood_analysis')
+                
+                results['platform_optimization'] = self.platform_optimizer.optimize_for_platforms(
+                    loudness_analysis, frequency_analysis, stereo_analysis, mood_analysis
+                )
+            except Exception as e:
+                logger.error(f"Platform optimization analysis failed: {e}")
+                results['platform_optimization'] = {'error': str(e)}
         
         return results
     
