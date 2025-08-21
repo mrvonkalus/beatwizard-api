@@ -19,6 +19,7 @@ from ..analysis.stereo_analyzer import StereoAnalyzer
 from ..analysis.sound_selection_analyzer import SoundSelectionAnalyzer
 from ..analysis.rhythmic_analyzer import RhythmicAnalyzer
 from ..analysis.harmonic_analyzer import HarmonicAnalyzer
+from ..analysis.mood_detector import MoodDetector
 from ..ai_integration.intelligent_feedback import IntelligentFeedbackGenerator
 from config.settings import audio_settings, performance_settings, project_settings
 
@@ -62,6 +63,7 @@ class EnhancedAudioAnalyzer:
         self.sound_selection_analyzer = SoundSelectionAnalyzer(self.sample_rate, self.hop_length)
         self.rhythmic_analyzer = RhythmicAnalyzer(self.sample_rate, self.hop_length)
         self.harmonic_analyzer = HarmonicAnalyzer(self.sample_rate, self.hop_length)
+        self.mood_detector = MoodDetector(self.sample_rate, self.hop_length)
         
         # Initialize AI feedback generator
         self.feedback_generator = IntelligentFeedbackGenerator()
@@ -111,7 +113,7 @@ class EnhancedAudioAnalyzer:
             
             # Determine analysis types to perform
             if analysis_types is None:
-                analysis_types = ['tempo', 'key', 'frequency', 'loudness', 'stereo', 'sound_selection', 'rhythm', 'harmony']
+                analysis_types = ['tempo', 'key', 'frequency', 'loudness', 'stereo', 'sound_selection', 'rhythm', 'harmony', 'mood']
             
             # Perform comprehensive analysis
             analysis_results = self._perform_analysis(audio_data, metadata, analysis_types)
@@ -266,6 +268,17 @@ class EnhancedAudioAnalyzer:
             except Exception as e:
                 logger.error(f"Harmonic analysis failed: {e}")
                 results['harmony_analysis'] = {'error': str(e)}
+        
+        # Mood Analysis (NEW!)
+        if 'mood' in analysis_types:
+            logger.debug("Performing mood/emotion analysis")
+            try:
+                tempo = results.get('tempo_analysis', {}).get('primary_tempo')
+                key = results.get('key_analysis', {}).get('primary_key')
+                results['mood_analysis'] = self.mood_detector.detect_mood(mono_audio, tempo, key)
+            except Exception as e:
+                logger.error(f"Mood analysis failed: {e}")
+                results['mood_analysis'] = {'error': str(e)}
         
         return results
     
