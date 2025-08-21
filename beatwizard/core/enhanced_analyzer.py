@@ -20,6 +20,7 @@ from ..analysis.sound_selection_analyzer import SoundSelectionAnalyzer
 from ..analysis.rhythmic_analyzer import RhythmicAnalyzer
 from ..analysis.harmonic_analyzer import HarmonicAnalyzer
 from ..analysis.mood_detector import MoodDetector
+from ..analysis.mastering_readiness import MasteringReadinessAnalyzer
 from ..ai_integration.intelligent_feedback import IntelligentFeedbackGenerator
 from config.settings import audio_settings, performance_settings, project_settings
 
@@ -64,6 +65,7 @@ class EnhancedAudioAnalyzer:
         self.rhythmic_analyzer = RhythmicAnalyzer(self.sample_rate, self.hop_length)
         self.harmonic_analyzer = HarmonicAnalyzer(self.sample_rate, self.hop_length)
         self.mood_detector = MoodDetector(self.sample_rate, self.hop_length)
+        self.mastering_readiness = MasteringReadinessAnalyzer()
         
         # Initialize AI feedback generator
         self.feedback_generator = IntelligentFeedbackGenerator()
@@ -113,7 +115,7 @@ class EnhancedAudioAnalyzer:
             
             # Determine analysis types to perform
             if analysis_types is None:
-                analysis_types = ['tempo', 'key', 'frequency', 'loudness', 'stereo', 'sound_selection', 'rhythm', 'harmony', 'mood']
+                analysis_types = ['tempo', 'key', 'frequency', 'loudness', 'stereo', 'sound_selection', 'rhythm', 'harmony', 'mood', 'mastering_readiness']
             
             # Perform comprehensive analysis
             analysis_results = self._perform_analysis(audio_data, metadata, analysis_types)
@@ -269,7 +271,7 @@ class EnhancedAudioAnalyzer:
                 logger.error(f"Harmonic analysis failed: {e}")
                 results['harmony_analysis'] = {'error': str(e)}
         
-        # Mood Analysis (NEW!)
+        # Mood Analysis
         if 'mood' in analysis_types:
             logger.debug("Performing mood/emotion analysis")
             try:
@@ -279,6 +281,24 @@ class EnhancedAudioAnalyzer:
             except Exception as e:
                 logger.error(f"Mood analysis failed: {e}")
                 results['mood_analysis'] = {'error': str(e)}
+        
+        # Mastering Readiness Analysis (NEW!)
+        if 'mastering_readiness' in analysis_types:
+            logger.debug("Performing mastering readiness assessment")
+            try:
+                # Collect required analyses for mastering assessment
+                frequency_analysis = results.get('frequency_analysis', {})
+                loudness_analysis = results.get('loudness_analysis', {})
+                stereo_analysis = results.get('stereo_analysis', {})
+                tempo_analysis = results.get('tempo_analysis')
+                mood_analysis = results.get('mood_analysis')
+                
+                results['mastering_readiness'] = self.mastering_readiness.assess_mastering_readiness(
+                    frequency_analysis, loudness_analysis, stereo_analysis, tempo_analysis, mood_analysis
+                )
+            except Exception as e:
+                logger.error(f"Mastering readiness analysis failed: {e}")
+                results['mastering_readiness'] = {'error': str(e)}
         
         return results
     

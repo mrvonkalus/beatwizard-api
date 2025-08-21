@@ -12,6 +12,7 @@ from .sound_selection_analyzer import SoundSelectionAnalyzer
 from .rhythmic_analyzer import RhythmicAnalyzer
 from .harmonic_analyzer import HarmonicAnalyzer
 from .mood_detector import MoodDetector
+from .mastering_readiness import MasteringReadinessAnalyzer
 
 __all__ = [
     'TempoDetector',
@@ -22,5 +23,6 @@ __all__ = [
     'SoundSelectionAnalyzer',
     'RhythmicAnalyzer',
     'HarmonicAnalyzer',
-    'MoodDetector'
+    'MoodDetector',
+    'MasteringReadinessAnalyzer'
 ]
